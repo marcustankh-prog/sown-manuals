@@ -6,3 +6,6 @@ output/
 src/data/uploads/
 reference/
 .streamlit/secrets.toml
+
+textbook.txt
+reference/
