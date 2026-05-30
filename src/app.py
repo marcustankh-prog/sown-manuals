@@ -184,7 +184,16 @@ if not has_anthropic:
     st.warning(
         "Add `ANTHROPIC_API_KEY` to `.env` (or Streamlit secrets) to enable AI drafting and chat editing."
     )
-if not has_openai:
+
+IMAGES_ENABLED = os.getenv("IMAGES_ENABLED", "false").lower() in ("1", "true", "yes", "on")
+
+if not IMAGES_ENABLED:
+    st.info(
+        "💸 Illustration generation is currently **disabled** to save API costs while "
+        "we refine the written instructions. The manual will render as text only. "
+        "Set `IMAGES_ENABLED=true` in `.env` or Streamlit secrets to re-enable."
+    )
+elif not has_openai:
     st.warning(
         "Add `OPENAI_API_KEY` to `.env` (or Streamlit secrets) to enable "
         "illustration & inspo-photo generation. Without it, all image "
@@ -218,8 +227,13 @@ with col_chat:
         if uploaded:
             st.image(uploaded, use_container_width=True)
         gen_disabled = not (uploaded and has_anthropic)
+        gen_label = (
+            "Generate draft & illustrations"
+            if (IMAGES_ENABLED and has_openai)
+            else "Generate draft (text only)"
+        )
         if st.button(
-            "Generate draft & illustrations",
+            gen_label,
             disabled=gen_disabled,
             use_container_width=True,
             type="primary",
@@ -238,7 +252,7 @@ with col_chat:
                     st.error(f"AI text draft failed: {e}")
                     st.stop()
 
-            if has_openai:
+            if IMAGES_ENABLED and has_openai:
                 from src import image_generator
 
                 out_dir = (
@@ -271,13 +285,19 @@ with col_chat:
                         for err in image_generator.LAST_ERRORS:
                             st.code(err, language="text")
             else:
-                st.info(
-                    "Text draft generated. Add `OPENAI_API_KEY` to enable "
-                    "illustration generation."
-                )
+                if not IMAGES_ENABLED:
+                    st.info(
+                        "Text draft generated. Illustration generation is "
+                        "disabled (set `IMAGES_ENABLED=true` to enable)."
+                    )
+                else:
+                    st.info(
+                        "Text draft generated. Add `OPENAI_API_KEY` to enable "
+                        "illustration generation."
+                    )
             st.rerun()
 
-        if flower.components:
+        if flower.components and IMAGES_ENABLED:
             if st.button(
                 "Regenerate illustrations",
                 use_container_width=True,
@@ -365,7 +385,7 @@ with col_chat:
                 regen_requests = []
 
         # Run any image-regeneration requests Claude asked for.
-        if regen_requests and has_openai:
+        if regen_requests and IMAGES_ENABLED and has_openai:
             from src import image_generator
 
             for req in regen_requests:
@@ -404,13 +424,14 @@ with col_chat:
                             "content": f"⚠️ {scope.title()} regeneration failed: {e}",
                         }
                     )
-        elif regen_requests and not has_openai:
+        elif regen_requests:
             st.session_state.chat_messages.append(
                 {
                     "role": "assistant",
                     "content": (
                         "⚠️ I asked to regenerate illustrations, but "
-                        "OPENAI_API_KEY is not configured."
+                        "image generation is currently disabled "
+                        "(or `OPENAI_API_KEY` is not configured)."
                     ),
                 }
             )
