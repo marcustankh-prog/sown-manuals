@@ -1,0 +1,162 @@
+{# Beaded Flower Manual — single-flower template.
+   Variables: see src/models.py (Flower).
+   `accent` is a hex color string injected from the flower's palette. #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ flower.title }}</title>
+  <link rel="stylesheet" href="{{ stylesheet_href }}">
+  <style>:root { --accent: {{ accent }}; --accent-soft: {{ accent_soft }}; }</style>
+</head>
+<body>
+
+{# -------------------- COVER -------------------- #}
+<section class="page cover">
+  <header>
+    <h1 class="cover-title">{{ flower.title }}</h1>
+    <div class="byline">pattern by {{ flower.author }}</div>
+  </header>
+
+  <div>
+    {% if flower.hero_image %}
+      <img class="hero" src="{{ flower.hero_image }}" alt="{{ flower.name }}">
+    {% endif %}
+
+    <p class="intro-text">{{ flower.intro }}</p>
+
+    {% if flower.palette %}
+      <div class="palette-strip">
+        {% for hex in flower.palette %}
+          <span class="swatch" style="background: {{ hex }}"></span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if flower.materials %}
+      <div class="materials-block">
+        <h3>Materials</h3>
+        {% if flower.yields %}<p style="margin:0 0 6pt 0; font-size:9.5pt; color:var(--muted);">{{ flower.yields }}</p>{% endif %}
+        <ul class="materials-grid">
+          {% for m in flower.materials %}
+            <li>{{ m.name }}{% if m.quantity %} <span style="color:var(--muted)">({{ m.quantity }})</span>{% endif %}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {% if flower.guided_video_url %}
+      <p class="video-link">
+        <strong>Guided Video Tutorial:</strong>
+        <a href="{{ flower.guided_video_url }}">{{ flower.guided_video_url }}</a>
+      </p>
+    {% endif %}
+  </div>
+</section>
+
+{# -------------------- ANATOMY DIAGRAM -------------------- #}
+{% if flower.anatomy_diagram %}
+<section class="page">
+  <h2 class="section">The parts you'll be making</h2>
+  <hr class="rule">
+  <p>Here's an overview of every piece you'll bead before assembling the
+  finished {{ flower.name|lower }}. Each labeled part below has its own
+  step-by-step section in the pages that follow.</p>
+  <figure style="margin: 12pt 0; text-align:center;">
+    <img src="{{ flower.anatomy_diagram.path }}" alt="Parts of the {{ flower.name }}" style="max-width:100%; max-height:520pt;">
+    {% if flower.anatomy_diagram.caption %}
+      <figcaption>{{ flower.anatomy_diagram.caption }}</figcaption>
+    {% endif %}
+  </figure>
+</section>
+{% endif %}
+
+{# -------------------- COMPONENTS -------------------- #}
+{% for c in flower.components %}
+<section class="page">
+  {% if loop.first %}
+    <h2 class="section">How to make the {{ flower.name }}</h2>
+    <hr class="rule">
+  {% endif %}
+
+  <article class="component">
+    <h3>{{ c.heading }}</h3>
+    {% if c.plain_description %}
+      <p class="plain-desc"><em>{{ c.plain_description }}</em></p>
+    {% endif %}
+    {% if c.count_label %}<div class="count">{{ c.count_label }}</div>{% endif %}
+
+    {% for para in c.paragraphs %}
+      <p>{{ para }}</p>
+    {% endfor %}
+
+    {% if c.tip %}
+      <div class="callout tip"><strong>Tip:</strong> {{ c.tip }}</div>
+    {% endif %}
+    {% if c.note %}
+      <div class="callout note"><strong>Note:</strong> {{ c.note }}</div>
+    {% endif %}
+
+    {% if c.images %}
+      <div class="image-row">
+        {% for img in c.images %}
+          <figure>
+            <img src="{{ img.path }}" alt="">
+            {% if img.caption %}<figcaption>{{ img.caption }}</figcaption>{% endif %}
+          </figure>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </article>
+</section>
+{% endfor %}
+
+{# -------------------- ASSEMBLY -------------------- #}
+{% if flower.assembly %}
+<section class="page">
+  <h2 class="section">{{ flower.assembly.heading }}</h2>
+  <hr class="rule">
+  {% for para in flower.assembly.paragraphs %}
+    <p>{{ para }}</p>
+  {% endfor %}
+  {% if flower.assembly.images %}
+    <div class="image-row">
+      {% for img in flower.assembly.images %}
+        <figure>
+          <img src="{{ img.path }}" alt="">
+          {% if img.caption %}<figcaption>{{ img.caption }}</figcaption>{% endif %}
+        </figure>
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{# -------------------- INSPO -------------------- #}
+{% if flower.inspo_images %}
+<section class="page">
+  <div class="inspo-title">{{ flower.name }} Inspo</div>
+  <div class="inspo">
+    {% for img in flower.inspo_images %}
+      <img src="{{ img.path }}" alt="">
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# -------------------- COPYRIGHT -------------------- #}
+<section class="page">
+  <div class="copyright">
+    <h2>Copyright &amp; Terms of Use</h2>
+    {% if flower.copyright_text %}
+      <p>{{ flower.copyright_text }}</p>
+    {% else %}
+      <p>This pattern and instructions are &copy; {{ flower.copyright_holder }}, {{ flower.copyright_year }}.
+         All rights reserved. For personal use only — please do not redistribute, resell, or share the
+         video tutorials. Thank you for supporting handmade pattern designers.</p>
+    {% endif %}
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "name": "Daisy",
+  "title": "French Beaded Daisy",
+  "author": "Henri Purnell",
+  "intro": "In this project, you'll learn how to make a delicate French beaded daisy with wire and seed beads. The beginner-friendly pattern takes you step by step through shaping the petals, assembling the flower, and finishing the stem.",
+  "guided_video_url": "https://youtu.be/WyMk3oJu5sQ",
+  "hero_image": null,
+  "palette": ["#f4f1ea", "#e8c85a", "#6f8260", "#3a4a36"],
+  "yields": "Makes 1 flower — multiply for more.",
+  "difficulty": "Beginner",
+  "materials": [
+    {"name": "2.0mm seed beads — white", "quantity": "5g"},
+    {"name": "2.0mm seed beads — green", "quantity": "2g"},
+    {"name": "2.0mm seed beads — gold", "quantity": "1g"},
+    {"name": "0.4 mm wire", "quantity": "1 spool"},
+    {"name": "1.2 mm stem wire", "quantity": "50 cm"},
+    {"name": "Green embroidery floss", "quantity": null},
+    {"name": "Green floral tape", "quantity": null},
+    {"name": "Measurement tape", "quantity": null},
+    {"name": "Scissors", "quantity": null}
+  ],
+  "components": [
+    {
+      "heading": "Daisy Petals (2x):",
+      "count_label": "Two sets of twelve petals",
+      "paragraphs": [
+        "For the daisy petals, make two sets of twelve petals, each twisted onto a single strand of 0.4 mm wire. Work directly from the spool, stringing about 36 cm of white beads.",
+        "Begin each petal with a 3 cm loop, leaving 5 cm of excess wire, and twist twice to secure. Repeat until you have twelve petals, then cut the wire with about 6 cm remaining and shape the petals into a half circle."
+      ],
+      "note": "The pictures and graphics in this beaded flower pattern are for demonstrating the technique only. They may not show the exact number of beads required.",
+      "images": []
+    },
+    {
+      "heading": "Flower Center (1x):",
+      "count_label": null,
+      "paragraphs": [
+        "Work directly from the 0.4 mm wire spool and string 10 cm of gold beads (gB). Bring 1 cm of beads to the front, leaving about 5 cm of excess wire, fold in half to form a small loop, and twist three times to secure.",
+        "Repeat this process nine more times. When all loops are made, roll them into a circle and twist the wire ends together to finish."
+      ],
+      "tip": "To add depth, occasionally hold both wire ends about 1 cm below the bead loop and twist several times to create a wire tail carrying the loop.",
+      "images": []
+    }
+  ],
+  "assembly": {
+    "heading": "Assembling the Stem:",
+    "paragraphs": [
+      "Take your 1.2 mm stem wire and cover it with green floral tape, gently stretching the tape as you wrap so it adheres tightly.",
+      "Position the first petal set by holding the shorter wire against the stem and wrapping the longer wire around so the petals sit evenly beneath the center. Secure with embroidery floss, then repeat with the second petal set.",
+      "Once the petals are attached, add three large leaves directly beneath the blossom and secure with floss. Wrap the floss about 2 cm further down and attach the first small leaf, then add the second small leaf another 1–2 cm below.",
+      "Finish by wrapping the stem neatly with floral tape to cover all exposed wire and hide all excess wire."
+    ],
+    "images": []
+  },
+  "inspo_images": [],
+  "copyright_year": 2026,
+  "copyright_holder": "Henri Purnell"
+}

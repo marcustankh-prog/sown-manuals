@@ -1,0 +1,250 @@
+/* Beaded Flower Manual — print stylesheet (A4 portrait).
+   Modeled on Henri Purnell's Spring Bouquet pattern: large serif titles,
+   airy spacing, soft sage/cream palette, two-column materials block. */
+
+@page {
+  size: A4;
+  margin: 18mm 16mm 16mm 16mm;
+  @bottom-right {
+    content: counter(page);
+    font-family: "Georgia", "Cormorant Garamond", serif;
+    font-size: 9pt;
+    color: #8a8a82;
+  }
+}
+
+:root {
+  --ink: #2d2a26;
+  --muted: #6b675f;
+  --rule: #d9d3c7;
+  --paper: #ffffff;
+  --accent: #6f8260;       /* sage green, replaced per-flower via inline style */
+  --accent-soft: #eef0e6;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "Georgia", "Cormorant Garamond", "Times New Roman", serif;
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+
+h1, h2, h3, .display {
+  font-family: "Cormorant Garamond", "Playfair Display", "Georgia", serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+h1.cover-title {
+  font-size: 38pt;
+  line-height: 1.05;
+  margin: 0 0 6pt 0;
+  font-weight: 400;
+}
+
+.byline {
+  font-style: italic;
+  color: var(--muted);
+  margin-bottom: 18pt;
+  font-size: 11pt;
+}
+
+h2.section {
+  font-size: 16pt;
+  margin: 0 0 6pt 0;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+h3.subsection {
+  font-size: 12pt;
+  margin: 12pt 0 4pt 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+p { margin: 0 0 8pt 0; }
+
+/* ---- Page primitives -------------------------------------------------- */
+
+.page {
+  page-break-after: always;
+  break-after: page;
+  min-height: 257mm; /* A4 minus margins */
+  position: relative;
+}
+.page:last-child { page-break-after: auto; }
+
+.rule {
+  border: none;
+  border-top: 0.5pt solid var(--rule);
+  margin: 10pt 0;
+}
+
+/* ---- Cover page ------------------------------------------------------- */
+
+.cover {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+}
+
+.cover .hero {
+  width: 100%;
+  max-height: 95mm;
+  object-fit: cover;
+  border-radius: 2pt;
+  margin: 8pt 0 14pt 0;
+}
+
+.intro-text {
+  font-size: 10.5pt;
+  color: var(--ink);
+  max-width: 165mm;
+}
+
+.materials-block {
+  margin-top: 12pt;
+  padding: 10pt 12pt;
+  background: var(--accent-soft);
+  border-left: 2pt solid var(--accent);
+}
+
+.materials-block h3 {
+  margin: 0 0 6pt 0;
+  font-size: 12pt;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 14pt;
+  row-gap: 2pt;
+  font-size: 10pt;
+}
+
+.materials-grid li {
+  list-style: "•  ";
+  margin-left: 12pt;
+  padding: 1pt 0;
+}
+
+.video-link {
+  margin-top: 10pt;
+  font-size: 10pt;
+  color: var(--muted);
+}
+.video-link a { color: var(--accent); text-decoration: none; }
+
+.palette-strip {
+  display: flex;
+  gap: 4pt;
+  margin-top: 8pt;
+}
+.palette-strip .swatch {
+  width: 14pt; height: 14pt;
+  border-radius: 50%;
+  border: 0.4pt solid var(--rule);
+}
+
+/* ---- Instruction pages ----------------------------------------------- */
+
+.component {
+  margin-bottom: 14pt;
+}
+
+.component h3 {
+  color: var(--accent);
+  font-size: 13pt;
+  margin: 0 0 4pt 0;
+  font-weight: 600;
+}
+
+.component .count {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 10pt;
+  margin-bottom: 4pt;
+}
+
+.component .plain-desc {
+  margin: 0 0 6pt 0;
+  color: var(--muted);
+  font-size: 10.5pt;
+  border-left: 2pt solid var(--accent-soft);
+  padding-left: 8pt;
+}
+
+.callout {
+  margin: 6pt 0;
+  padding: 6pt 10pt;
+  background: #fff;
+  border-left: 2pt solid var(--accent);
+  font-size: 9.5pt;
+  color: var(--muted);
+}
+.callout.tip { border-left-color: #c9a14a; }
+.callout.note { border-left-color: #8a8a82; }
+.callout strong { color: var(--ink); }
+
+.image-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(50mm, 1fr));
+  gap: 6pt;
+  margin: 8pt 0;
+}
+.image-row figure { margin: 0; }
+.image-row img {
+  width: 100%;
+  height: 55mm;
+  object-fit: contain;
+  background: #fbf8f1;
+  border-radius: 2pt;
+}
+.image-row figcaption {
+  font-size: 8.5pt;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 2pt;
+  font-style: italic;
+}
+
+/* ---- Inspo gallery --------------------------------------------------- */
+
+.inspo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6pt;
+  margin-top: 10pt;
+}
+.inspo img {
+  width: 100%;
+  height: 110mm;
+  object-fit: cover;
+  border-radius: 2pt;
+}
+.inspo-title {
+  font-size: 28pt;
+  text-align: center;
+  margin: 18pt 0 6pt 0;
+  font-style: italic;
+  color: var(--accent);
+}
+
+/* ---- Copyright page -------------------------------------------------- */
+
+.copyright {
+  font-size: 9pt;
+  color: var(--muted);
+  margin-top: 30pt;
+  max-width: 150mm;
+}
+.copyright h2 { color: var(--ink); font-size: 14pt; margin-bottom: 6pt; }
