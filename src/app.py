@@ -269,17 +269,23 @@ with col_chat:
         expanded=not st.session_state.chat_messages and not flower.components,
     ):
         uploaded = st.file_uploader(
-            "Drop one or more flower photos here",
+            "Drop up to 5 flower photos here",
             type=["jpg", "jpeg", "png", "webp"],
             label_visibility="collapsed",
             accept_multiple_files=True,
             help=(
-                "Upload one photo, or several reference photos of the same "
-                "flower (different angles, close-ups, the leaves, the back of "
-                "a petal). The first photo becomes the cover; the rest are "
+                "Upload 1\u20135 reference photos of the same flower "
+                "(different angles, close-ups, leaves, back of a petal). "
+                "The first photo becomes the cover; the rest are "
                 "cross-referenced for accuracy."
             ),
         )
+        if uploaded and len(uploaded) > 5:
+            st.warning(
+                f"You uploaded {len(uploaded)} photos \u2014 only the first 5 "
+                "will be used."
+            )
+            uploaded = uploaded[:5]
         name_hint = st.text_input(
             "What flower is this?", value=flower.name, key="name_hint"
         )
