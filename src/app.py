@@ -100,207 +100,12 @@ st.set_page_config(page_title="SOWN — Beaded Flower Manual", page_icon="🌿",
 
 # === Brand styling (Sown.objects identity) ===================================
 
-st.markdown(
-    """
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --sage: #8A9180;
-        --sage-dark: #6B7164;
-        --sage-light: #C4CABD;
-        --sage-pale: #EEF0EB;
-        --cream: #F5F0E8;
-        --cream-dark: #E8E0D0;
-        --parchment: #F9F6F0;
-        --blush: #D4B8A8;
-        --terracotta: #B8826A;
-        --moss: #5C6652;
-        --ink: #2A2B27;
-        --muted: #7A7B75;
-        --serif: 'Cormorant Garamond', Georgia, serif;
-        --sans: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
-      }
-
-      html, body, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"] {
-        font-family: var(--sans) !important;
-        font-weight: 300;
-        color: var(--ink);
-      }
-
-      [data-testid="stAppViewContainer"] { background: var(--parchment); }
-      [data-testid="stHeader"] { background: transparent; }
-
-      /* SOWN wordmark header */
-      .sown-header {
-        text-align: left;
-        padding: 1.5rem 0 0.5rem 0;
-        border-bottom: 1px solid var(--cream-dark);
-        margin-bottom: 1.5rem;
-      }
-      .sown-wordmark {
-        font-family: var(--serif);
-        font-size: 3.5rem;
-        font-weight: 600;
-        letter-spacing: 0.18em;
-        color: var(--ink);
-        line-height: 1;
-        margin: 0;
-      }
-      .sown-tagline {
-        font-family: var(--sans);
-        font-size: 0.65rem;
-        font-weight: 400;
-        letter-spacing: 0.35em;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin-top: 0.6rem;
-      }
-      .sown-divider {
-        width: 32px;
-        height: 1px;
-        background: var(--sage-light);
-        margin: 0.85rem 0;
-      }
-      .sown-subtitle {
-        font-family: var(--serif);
-        font-style: italic;
-        font-size: 1.05rem;
-        color: var(--sage-dark);
-        margin: 0 0 0.5rem 0;
-      }
-
-      /* Headings */
-      h1, h2, h3, h4 {
-        font-family: var(--serif) !important;
-        font-weight: 400 !important;
-        color: var(--ink);
-        letter-spacing: 0.01em;
-      }
-
-      /* Buttons — quiet, square-ish, sage */
-      .stButton > button, .stDownloadButton > button {
-        font-family: var(--sans) !important;
-        font-weight: 400 !important;
-        font-size: 0.78rem !important;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        border-radius: 2px !important;
-        border: 1px solid var(--cream-dark) !important;
-        background: var(--cream) !important;
-        color: var(--ink) !important;
-        padding: 0.55rem 1rem !important;
-        transition: all 0.2s ease;
-      }
-      .stButton > button:hover, .stDownloadButton > button:hover {
-        border-color: var(--sage) !important;
-        background: var(--sage-pale) !important;
-        color: var(--sage-dark) !important;
-      }
-      .stButton > button[kind="primary"] {
-        background: var(--sage) !important;
-        border-color: var(--sage) !important;
-        color: var(--cream) !important;
-      }
-      .stButton > button[kind="primary"]:hover {
-        background: var(--sage-dark) !important;
-        border-color: var(--sage-dark) !important;
-        color: var(--cream) !important;
-      }
-      .stButton > button:disabled {
-        opacity: 0.45;
-      }
-
-      /* Inputs */
-      .stTextInput input, .stTextArea textarea, .stChatInput textarea {
-        font-family: var(--sans) !important;
-        background: var(--cream) !important;
-        border: 1px solid var(--cream-dark) !important;
-        border-radius: 2px !important;
-        color: var(--ink) !important;
-      }
-      .stTextInput input:focus, .stTextArea textarea:focus {
-        border-color: var(--sage) !important;
-        box-shadow: none !important;
-      }
-
-      /* File uploader */
-      [data-testid="stFileUploaderDropzone"] {
-        background: var(--cream) !important;
-        border: 1px dashed var(--sage-light) !important;
-        border-radius: 2px !important;
-      }
-
-      /* Chat messages */
-      [data-testid="stChatMessage"] {
-        background: var(--cream) !important;
-        border: 1px solid var(--cream-dark);
-        border-radius: 2px;
-        padding: 0.75rem 1rem;
-      }
-      [data-testid="stChatMessage"] p {
-        font-family: var(--sans);
-        line-height: 1.7;
-      }
-
-      /* Captions / small labels — uppercase muted */
-      [data-testid="stCaptionContainer"], .stCaption, [data-testid="stMarkdownContainer"] small {
-        font-family: var(--sans) !important;
-        font-size: 0.72rem !important;
-        letter-spacing: 0.15em;
-        text-transform: uppercase;
-        color: var(--muted) !important;
-      }
-
-      /* Expander */
-      [data-testid="stExpander"] {
-        border: 1px solid var(--cream-dark) !important;
-        border-radius: 2px !important;
-        background: var(--cream) !important;
-      }
-      [data-testid="stExpander"] summary {
-        font-family: var(--sans) !important;
-        font-weight: 400 !important;
-        font-size: 0.78rem !important;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--ink) !important;
-      }
-
-      /* Sliders */
-      .stSlider [data-baseweb="slider"] div[role="slider"] {
-        background: var(--sage) !important;
-        border-color: var(--sage-dark) !important;
-      }
-
-      /* Progress bar */
-      .stProgress > div > div > div { background: var(--sage) !important; }
-
-      /* Alerts — soft sage / blush rather than harsh blue/yellow */
-      [data-testid="stAlertContentInfo"] { background: var(--sage-pale) !important; color: var(--moss) !important; }
-      [data-testid="stAlertContentWarning"] { background: #F5E8DC !important; color: var(--terracotta) !important; }
-      [data-testid="stAlertContentError"] { background: #F5E0D8 !important; color: #8a4a35 !important; }
-      [data-testid="stAlertContentSuccess"] { background: var(--sage-pale) !important; color: var(--moss) !important; }
-
-      /* Popover */
-      [data-testid="stPopover"] button {
-        background: transparent !important;
-        border: 1px solid var(--cream-dark) !important;
-      }
-
-      /* Iframe (live preview) — soft frame */
-      iframe {
-        border: 1px solid var(--cream-dark) !important;
-        border-radius: 2px;
-        background: var(--parchment);
-      }
-
-      /* Hide the default Streamlit hamburger / footer for a cleaner look */
-      footer { visibility: hidden; }
-    </style>
-    """,
-    unsafe_allow_html=True,
+_APP_CSS = (ROOT / "static" / "app.css").read_text(encoding="utf-8")
+st.html(
+    '<link rel="preconnect" href="https://fonts.googleapis.com">'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+    '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">'
+    f"<style>{_APP_CSS}</style>"
 )
 
 flower = _ensure_state()
@@ -314,16 +119,25 @@ has_openai = bool(os.getenv("OPENAI_API_KEY"))
 
 bar_l, bar_r = st.columns([0.85, 0.15])
 with bar_l:
-    st.markdown(
-        """
-        <div class="sown-header">
-          <h1 class="sown-wordmark">SOWN</h1>
-          <div class="sown-tagline">Beaded Flowers &amp; Botanical Artistry</div>
-          <div class="sown-divider"></div>
-          <p class="sown-subtitle">A quiet studio for crafting beaded-flower manuals — one bead, one petal at a time.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    st.html(
+        '<div class="sown-header">'
+        '<svg class="sown-mark" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">'
+        '<circle cx="28" cy="28" r="20" stroke="#C4CABD" stroke-width="0.8" fill="none"/>'
+        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55"/>'
+        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(60 28 28)"/>'
+        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(120 28 28)"/>'
+        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(180 28 28)"/>'
+        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(240 28 28)"/>'
+        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(300 28 28)"/>'
+        '<circle cx="28" cy="28" r="3.5" fill="#5C6652"/>'
+        '</svg>'
+        '<div class="sown-text">'
+        '<h1 class="sown-wordmark">SOWN</h1>'
+        '<div class="sown-tagline">Beaded Flowers &amp; Botanical Artistry</div>'
+        '<div class="sown-divider"></div>'
+        '<p class="sown-subtitle">A quiet studio for crafting beaded-flower manuals — one bead, one petal at a time.</p>'
+        '</div>'
+        '</div>'
     )
 with bar_r:
     with st.popover("Settings", use_container_width=True):
