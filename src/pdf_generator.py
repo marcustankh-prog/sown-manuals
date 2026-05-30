@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import os
+import sys
 from pathlib import Path
 from typing import Tuple
 from urllib.parse import unquote, urlparse
@@ -29,12 +31,22 @@ def _to_data_uri(src: str) -> str:
     if not src or src.startswith(("data:", "http://", "https://")):
         return src
     if src.startswith("file:"):
-        path = Path(unquote(urlparse(src).path).lstrip("/"))
+        raw = unquote(urlparse(src).path)
+        # On Windows, file URIs look like file:///C:/Users/... so urlparse
+        # returns "/C:/Users/..." — drop the leading slash. On POSIX the
+        # leading slash IS the absolute root and must be preserved.
+        if os.name == "nt" and len(raw) >= 3 and raw[0] == "/" and raw[2] == ":":
+            raw = raw[1:]
+        path = Path(raw)
     else:
         path = Path(src)
     try:
         data = path.read_bytes()
-    except OSError:
+    except OSError as exc:
+        print(
+            f"[pdf_generator] could not inline image {src!r} (resolved to {path}): {exc}",
+            file=sys.stderr,
+        )
         return src
     mime = mimetypes.guess_type(path.name)[0] or "image/png"
     b64 = base64.b64encode(data).decode("ascii")
