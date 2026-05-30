@@ -147,6 +147,18 @@ class Flower(BaseModel):
         "en",
         description="Output language code: 'en' for English, 'ko' for Korean.",
     )
+    source_kind: Optional[str] = Field(
+        None,
+        description="Classifier verdict on the source photo: 'plant', "
+                    "'beaded', 'illustration', or 'unclear'.",
+    )
+    source_mode: str = Field(
+        "plant",
+        description="Which prompt mode produced this draft: 'plant' "
+                    "(infer from a real flower) or 'recreate' (copy a "
+                    "finished beaded piece).",
+    )
+    source_classifier_reason: Optional[str] = None
 
     # Color palette suggested from the photo (hex strings, used for accents)
     palette: List[str] = Field(default_factory=list)

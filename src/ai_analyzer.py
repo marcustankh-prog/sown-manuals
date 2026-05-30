@@ -410,10 +410,27 @@ def analyze_photo(
     *,
     hint_name: Optional[str] = None,
     language: str = "en",
+    mode: str = "plant",
 ) -> Flower:
-    """Send the photo to the configured vision model and return a Flower draft."""
+    """Send the photo to the configured vision model and return a Flower draft.
+
+    `mode`:
+      - "plant"    : the photo is a real plant; derive an anatomy-driven
+                     pattern (default).
+      - "recreate" : the photo is a finished beaded piece; recreate it
+                     as faithfully as possible.
+    """
     image_path = Path(image_path)
     provider = os.getenv("AI_PROVIDER", "anthropic").lower()
+
+    # Classify the photo first (cheap Haiku call). Best-effort — if it
+    # fails, fall back to whatever mode the user selected.
+    classification = {"kind": "unclear", "reason": ""}
+    try:
+        classification = _classify_photo(image_path)
+    except Exception:  # noqa: BLE001
+        pass
+
     user_prompt = (
         "Analyze the flower in the attached photo and produce a complete pattern "
         "manual JSON. Match the schema exactly.\n\n"
@@ -423,12 +440,18 @@ def analyze_photo(
         user_prompt += f"\nThe user calls this flower: {hint_name}.\n"
 
     lang_directive = _language_directive(language)
+    mode_directive = _mode_directive(mode)
+
+    system_addendum = lang_directive + mode_directive
 
     if provider == "openai":
-        flower = _analyze_openai(image_path, user_prompt, lang_directive)
+        flower = _analyze_openai(image_path, user_prompt, system_addendum)
     else:
-        flower = _analyze_anthropic(image_path, user_prompt, lang_directive)
+        flower = _analyze_anthropic(image_path, user_prompt, system_addendum)
     flower.language = language
+    flower.source_kind = classification.get("kind")
+    flower.source_classifier_reason = classification.get("reason")
+    flower.source_mode = mode
     return flower
 
 
@@ -450,6 +473,87 @@ def _language_directive(language: str) -> str:
         "\n\n=== OUTPUT LANGUAGE ===\n"
         "Write the entire manual in natural English."
     )
+
+
+def _mode_directive(mode: str) -> str:
+    if (mode or "").lower() == "recreate":
+        return (
+            "\n\n=== SOURCE MODE: RECREATE ===\n"
+            "The uploaded photo is a FINISHED BEADED FLOWER made by another "
+            "artist (not a living plant). Your task is to produce a pattern "
+            "that recreates THIS SPECIFIC BEADED PIECE as faithfully as "
+            "possible. Treat the photo as the design target.\n"
+            "  \u2022 Count petals and layers EXACTLY as shown in the photo. "
+            "Do NOT add extra petals or layers based on what the live plant "
+            "would have.\n"
+            "  \u2022 Use the bead colours visible in the photo for the "
+            "palette. Do not 'correct' to the natural plant colour.\n"
+            "  \u2022 Match the petal shapes, sizes, and proportions as "
+            "they appear in the beaded piece, even if they're stylised.\n"
+            "  \u2022 Anatomy fields describe the BEADED piece as it is, "
+            "not the botanical species.\n"
+            "  \u2022 In the intro, mention this manual recreates a "
+            "specific beaded design rather than capturing a live plant.\n"
+            "  \u2022 Technique selection still follows the canonical six "
+            "lessons \u2014 pick whichever technique produces the silhouette "
+            "you see in the photo."
+        )
+    return (
+        "\n\n=== SOURCE MODE: PLANT ===\n"
+        "The photo is of a real living plant. Document its anatomy as a "
+        "botanist would and translate that into a beadable pattern."
+    )
+
+
+def _classify_photo(image_path: Path) -> dict:
+    """Cheap Haiku-tier classifier returning {kind, reason}.
+
+    kind is one of: "plant", "beaded", "illustration", "unclear".
+    """
+    import anthropic  # lazy
+
+    client = anthropic.Anthropic()
+    model = os.getenv("ANTHROPIC_CLASSIFY_MODEL", "claude-haiku-4-5-20251001")
+    b64, mime = _encode_image(image_path)
+
+    resp = client.messages.create(
+        model=model,
+        max_tokens=200,
+        system=(
+            "You classify flower photos into one of four categories. "
+            "Reply with strict JSON only: "
+            '{\"kind\": \"plant\"|\"beaded\"|\"illustration\"|\"unclear\", '
+            '\"reason\": \"one short sentence\"}.\n\n'
+            "Definitions:\n"
+            "- plant       : a photograph of a real living or fresh-cut flower\n"
+            "- beaded      : a finished craft flower made of seed beads + wire "
+            "(visible bead texture, wire stems, bead-grid patterning)\n"
+            "- illustration: a drawing, painting, vector art, or stylised "
+            "rendering rather than a photograph\n"
+            "- unclear     : you genuinely cannot tell"
+        ),
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image",
+                 "source": {"type": "base64", "media_type": mime, "data": b64}},
+                {"type": "text", "text": "Classify this image."},
+            ],
+        }],
+    )
+    text = "".join(b.text for b in resp.content if b.type == "text").strip()
+    if text.startswith("```"):
+        text = text.strip("`")
+        if text.lower().startswith("json"):
+            text = text[4:].lstrip()
+    try:
+        data = json.loads(text)
+    except Exception:  # noqa: BLE001
+        return {"kind": "unclear", "reason": "classifier returned non-JSON"}
+    kind = str(data.get("kind", "unclear")).lower()
+    if kind not in {"plant", "beaded", "illustration", "unclear"}:
+        kind = "unclear"
+    return {"kind": kind, "reason": str(data.get("reason", ""))[:300]}
 
 
 # ----------------------------------------------------------------------------

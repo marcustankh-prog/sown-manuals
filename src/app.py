@@ -283,6 +283,18 @@ with col_chat:
             key="lang_choice",
         )
         lang_code = "ko" if lang_choice.startswith("\ud55c") else "en"
+        recreate_mode = st.checkbox(
+            "\U0001FAA1 This is already a beaded flower \u2014 recreate it exactly",
+            value=False,
+            key="recreate_mode",
+            help=(
+                "Tick this if your photo is a finished beaded piece (not a "
+                "living plant). The pattern will copy its layer counts, "
+                "petal shapes, and bead colours rather than improvise from a "
+                "real flower."
+            ),
+        )
+        gen_mode = "recreate" if recreate_mode else "plant"
         if uploaded:
             st.image(uploaded, use_container_width=True)
         gen_disabled = not (uploaded and has_anthropic)
@@ -303,7 +315,10 @@ with col_chat:
                 saved = _save_uploaded(uploaded, name_hint)
                 try:
                     draft = ai_analyzer.analyze_photo(
-                        saved, hint_name=name_hint or None, language=lang_code
+                        saved,
+                        hint_name=name_hint or None,
+                        language=lang_code,
+                        mode=gen_mode,
                     )
                     draft.hero_image = saved.as_uri()
                     st.session_state.flower = draft
@@ -401,6 +416,56 @@ with col_chat:
                             st.code(err, language="text")
                 else:
                     st.rerun()
+
+    # ---- Source-photo classifier warning --------------------------------
+    _src_kind = getattr(flower, "source_kind", None)
+    _src_mode = getattr(flower, "source_mode", "plant")
+    _src_reason = getattr(flower, "source_classifier_reason", "") or ""
+    if _src_kind == "beaded" and _src_mode == "plant":
+        st.warning(
+            "🪡 This photo looks like an **already-beaded flower**, but the "
+            "manual was generated in *plant mode* — petal counts and anatomy "
+            "may not match the piece in the photo."
+            + (f"\n\n_Classifier note: {_src_reason}_" if _src_reason else "")
+        )
+        if has_anthropic and st.button(
+            "Regenerate as a recreation of this beaded piece",
+            key="regen_recreate",
+            use_container_width=True,
+        ):
+            from urllib.parse import urlparse, unquote
+            from src import ai_analyzer
+
+            hero = flower.hero_image or ""
+            src = (
+                Path(unquote(urlparse(hero).path).lstrip("/"))
+                if hero.startswith("file:")
+                else Path(hero) if hero else None
+            )
+            if src and src.exists():
+                with st.spinner("Regenerating in recreation mode…"):
+                    try:
+                        draft = ai_analyzer.analyze_photo(
+                            src,
+                            hint_name=flower.name,
+                            language=flower.language,
+                            mode="recreate",
+                        )
+                        draft.hero_image = src.as_uri()
+                        st.session_state.flower = draft
+                        library.save(draft)
+                        st.rerun()
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Regeneration failed: {e}")
+            else:
+                st.error("Original photo file is no longer available; please re-upload.")
+    elif _src_kind == "illustration" and _src_mode == "plant":
+        st.info(
+            "🎨 This photo looks like an illustration or stylised rendering "
+            "rather than a real-plant photograph. The pattern was generated "
+            "in plant mode — anatomy may be approximate."
+            + (f"\n\n_Classifier note: {_src_reason}_" if _src_reason else "")
+        )
 
     # ---- Chat ------------------------------------------------------------
     chat_box = st.container(height=480)
