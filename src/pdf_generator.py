@@ -75,8 +75,25 @@ def _hex_lighten(hex_color: str, amount: float = 0.85) -> str:
     return f"#{r:02x}{g:02x}{b:02x}"
 
 
+def _luminance(hex_color: str) -> float:
+    h = hex_color.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    try:
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    except ValueError:
+        return 1.0
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+
 def _accent_for(flower: Flower) -> Tuple[str, str]:
-    accent = flower.palette[0] if flower.palette else "#6f8260"
+    # Skip near-white palette entries — they render as invisible headings on
+    # the cream paper background. Fall back to the next dark-enough swatch,
+    # or the default sage if nothing in the palette is readable.
+    accent = next(
+        (c for c in (flower.palette or []) if _luminance(c) < 0.7),
+        "#6f8260",
+    )
     return accent, _hex_lighten(accent, 0.85)
 
 
