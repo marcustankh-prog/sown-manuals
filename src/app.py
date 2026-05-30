@@ -19,15 +19,7 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT.parent) not in sys.path:
     sys.path.insert(0, str(ROOT.parent))
 
-from src.models import (  # noqa: E402
-    Anatomy,
-    AssemblySection,
-    Component,
-    ComponentImage,
-    Flower,
-    Material,
-    PetalLayer,
-)
+from src.models import Flower  # noqa: E402
 from src import pdf_generator  # noqa: E402
 from src import library  # noqa: E402
 

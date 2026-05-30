@@ -1,4 +1,4 @@
-﻿"""Generate beading-process illustrations via OpenAI's image API.
+"""Generate beading-process illustrations via OpenAI's image API.
 
 Two distinct styles:
   - **Instruction images** (anatomy, components, assembly) â€” minimalist

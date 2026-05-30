@@ -123,8 +123,7 @@ def render_html(flower: Flower, *, embed_css: bool = True) -> str:
     template = _env.get_template("manual.html.j2")
     if embed_css:
         css = (STATIC_DIR / "style.css").read_text(encoding="utf-8")
-        stylesheet_href = "data:text/css;charset=utf-8," + css.replace("\n", " ")
-        # Easier: just inline via <style>; replace link href with embedded blob
+        # Inline the stylesheet via <style> rather than linking it.
         html = template.render(
             flower=flower,
             stylesheet_href="about:blank",
