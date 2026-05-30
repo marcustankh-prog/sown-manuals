@@ -230,7 +230,7 @@ with col_chat:
                 "any section."
             )
             for ent in _entries:
-                lib_l, lib_m, lib_r = st.columns([0.55, 0.22, 0.23])
+                lib_l, lib_m, lib_r = st.columns([0.5, 0.25, 0.25])
                 with lib_l:
                     st.markdown(
                         f"**{ent['name']}**  \n"
@@ -255,12 +255,33 @@ with col_chat:
                         st.rerun()
         if flower.components:
             st.divider()
+            default_save_name = st.session_state.get(
+                "save_name_input", flower.name
+            )
+            save_name = st.text_input(
+                "Save as",
+                value=default_save_name,
+                key="save_name_input",
+                help=(
+                    "File name for this manual in your library. Use this to "
+                    "keep multiple variants of the same flower (e.g. "
+                    "“peony — pink v2”). Saving under an existing "
+                    "name overwrites it."
+                ),
+            )
+            slug_preview = library.slugify(save_name)
+            already = library.exists(slug_preview)
+            st.caption(
+                f"Saved as `{slug_preview}.json`"
+                + (" — will **overwrite** existing entry." if already else ".")
+            )
             if st.button(
-                f"\U0001F4BE Save current manual as \u201c{flower.name}\u201d",
+                "\U0001F4BE Save current manual",
                 use_container_width=True,
+                disabled=not save_name.strip(),
             ):
-                library.save(flower)
-                st.success("Saved.")
+                library.save(flower, save_name=save_name)
+                st.success(f"Saved as “{save_name}”.")
                 st.rerun()
 
     # ---- Photo + Generate (chat-first onboarding) -----------------------

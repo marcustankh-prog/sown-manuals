@@ -27,9 +27,10 @@ def _path_for(slug: str) -> Path:
     return LIBRARY_DIR / f"{slug}.json"
 
 
-def save(flower: Flower) -> Path:
-    """Persist a flower to the library, keyed by slug of its name. Overwrites."""
-    slug = slugify(flower.name)
+def save(flower: Flower, save_name: str | None = None) -> Path:
+    """Persist a flower to the library. If `save_name` is given, it is used
+    as the filename slug; otherwise the flower's name is used. Overwrites."""
+    slug = slugify(save_name if save_name else flower.name)
     p = _path_for(slug)
     p.write_text(flower.model_dump_json(indent=2), encoding="utf-8")
     return p
