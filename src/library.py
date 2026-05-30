@@ -29,8 +29,13 @@ def _path_for(slug: str) -> Path:
 
 def save(flower: Flower, save_name: str | None = None) -> Path:
     """Persist a flower to the library. If `save_name` is given, it is used
-    as the filename slug; otherwise the flower's name is used. Overwrites."""
-    slug = slugify(save_name if save_name else flower.name)
+    as the filename slug AND stored on the flower as its library label so
+    the saved-manuals list reflects the user's chosen name. Overwrites."""
+    if save_name and save_name.strip():
+        flower.library_label = save_name.strip()
+        slug = slugify(save_name)
+    else:
+        slug = slugify(flower.name)
     p = _path_for(slug)
     p.write_text(flower.model_dump_json(indent=2), encoding="utf-8")
     return p
@@ -60,7 +65,7 @@ def list_entries() -> list[dict]:
             continue
         out.append({
             "slug": p.stem,
-            "name": data.name,
+            "name": data.library_label or data.name,
             "title": data.title,
             "mtime": p.stat().st_mtime,
             "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M"),

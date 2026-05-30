@@ -160,6 +160,10 @@ class Flower(BaseModel):
     )
     source_classifier_reason: Optional[str] = None
 
+    # User-supplied label for the library entry ("Save as" name).
+    # Displayed in the saved-manuals list when present; otherwise `name` is shown.
+    library_label: Optional[str] = None
+
     # Color palette suggested from the photo (hex strings, used for accents)
     palette: List[str] = Field(default_factory=list)
 

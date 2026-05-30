@@ -234,9 +234,13 @@ with col_chat:
                 with lib_m:
                     if st.button("Load", key=f"lib_load_{ent['slug']}", use_container_width=True):
                         try:
-                            st.session_state.flower = library.load(ent["slug"])
+                            loaded = library.load(ent["slug"])
+                            st.session_state.flower = loaded
                             st.session_state.chat_messages = []
                             st.session_state.chat_history = []
+                            st.session_state.save_name_input = (
+                                loaded.library_label or loaded.name
+                            )
                             st.success(f"Loaded \u201c{ent['name']}\u201d.")
                             st.rerun()
                         except Exception as e:  # noqa: BLE001
@@ -248,7 +252,7 @@ with col_chat:
         if flower.components:
             st.divider()
             default_save_name = st.session_state.get(
-                "save_name_input", flower.name
+                "save_name_input", flower.library_label or flower.name
             )
             save_name = st.text_input(
                 "Save as",
