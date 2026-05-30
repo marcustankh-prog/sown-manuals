@@ -155,7 +155,7 @@ def chat(
     from anthropic import Anthropic
 
     client = Anthropic(api_key=api_key)
-    model = model or os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+    model = model or os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
 
     flower_json = flower.model_dump_json(indent=2)
     system = (
