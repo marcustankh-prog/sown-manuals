@@ -29,6 +29,7 @@ from src.models import (  # noqa: E402
     PetalLayer,
 )
 from src import pdf_generator  # noqa: E402
+from src import library  # noqa: E402
 
 load_dotenv(ROOT.parent / ".env", override=True)
 
@@ -211,6 +212,57 @@ if "chat_history" not in st.session_state:
 col_chat, col_preview = st.columns([0.42, 0.58], gap="large")
 
 with col_chat:
+    # ---- Saved manuals library -----------------------------------------
+    _entries = library.list_entries()
+    with st.expander(
+        f"Saved manuals ({len(_entries)})",
+        expanded=bool(_entries) and not flower.components,
+    ):
+        if not _entries:
+            st.caption(
+                "No saved manuals yet. Drafts auto-save here after generation "
+                "and after each chat edit, so you can pick up where you left off."
+            )
+        else:
+            st.caption(
+                "Click **Load** to continue editing a previous manual. The chat "
+                "editor still works on loaded manuals \u2014 ask Claude to refine "
+                "any section."
+            )
+            for ent in _entries:
+                lib_l, lib_m, lib_r = st.columns([0.55, 0.22, 0.23])
+                with lib_l:
+                    st.markdown(
+                        f"**{ent['name']}**  \n"
+                        f"<span style='color:#7A7B75;font-size:0.85em'>"
+                        f"{ent['components']} components \u00b7 {ent['modified']}"
+                        f"</span>",
+                        unsafe_allow_html=True,
+                    )
+                with lib_m:
+                    if st.button("Load", key=f"lib_load_{ent['slug']}", use_container_width=True):
+                        try:
+                            st.session_state.flower = library.load(ent["slug"])
+                            st.session_state.chat_messages = []
+                            st.session_state.chat_history = []
+                            st.success(f"Loaded \u201c{ent['name']}\u201d.")
+                            st.rerun()
+                        except Exception as e:  # noqa: BLE001
+                            st.error(f"Could not load: {e}")
+                with lib_r:
+                    if st.button("Delete", key=f"lib_del_{ent['slug']}", use_container_width=True):
+                        library.delete(ent["slug"])
+                        st.rerun()
+        if flower.components:
+            st.divider()
+            if st.button(
+                f"\U0001F4BE Save current manual as \u201c{flower.name}\u201d",
+                use_container_width=True,
+            ):
+                library.save(flower)
+                st.success("Saved.")
+                st.rerun()
+
     # ---- Photo + Generate (chat-first onboarding) -----------------------
     with st.expander(
         "Start from a photo",
@@ -248,6 +300,7 @@ with col_chat:
                     )
                     draft.hero_image = saved.as_uri()
                     st.session_state.flower = draft
+                    library.save(draft)
                 except Exception as e:  # noqa: BLE001
                     st.error(f"AI text draft failed: {e}")
                     st.stop()
@@ -378,6 +431,7 @@ with col_chat:
                 if updated is not None:
                     st.session_state.flower = updated
                     flower = updated
+                    library.save(updated)
             except Exception as e:  # noqa: BLE001
                 st.session_state.chat_messages.append(
                     {"role": "assistant", "content": f"⚠️ Error: {e}"}
