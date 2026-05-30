@@ -48,11 +48,6 @@
       </div>
     {% endif %}
 
-    {% if flower.guided_video_url %}
-      <p class="video-link">
-        Guided video tutorial — <a href="{{ flower.guided_video_url }}">{{ flower.guided_video_url }}</a>
-      </p>
-    {% endif %}
   </div>
 </section>
 
@@ -160,8 +155,8 @@
       <p>{{ flower.copyright_text }}</p>
     {% else %}
       <p>This pattern and instructions are &copy; {{ flower.copyright_holder }}, {{ flower.copyright_year }}.
-         All rights reserved. For personal use only — please do not redistribute, resell, or share the
-         video tutorials. Thank you for supporting handmade pattern designers.</p>
+         All rights reserved. For personal use only — please do not redistribute or resell.
+         Thank you for supporting handmade pattern designers.</p>
     {% endif %}
     <div class="copyright-mark">SOWN</div>
   </div>

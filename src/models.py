@@ -142,7 +142,6 @@ class Flower(BaseModel):
     title: str = Field(..., description='e.g. "French Beaded Daisy"')
     author: str = "Sown.objects"
     intro: str = ""
-    guided_video_url: Optional[str] = None
     hero_image: Optional[str] = None
 
     # Color palette suggested from the photo (hex strings, used for accents)
