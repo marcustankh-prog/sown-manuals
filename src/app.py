@@ -276,6 +276,13 @@ with col_chat:
         name_hint = st.text_input(
             "What flower is this?", value=flower.name, key="name_hint"
         )
+        lang_choice = st.radio(
+            "Manual language",
+            options=["English", "\ud55c\uad6d\uc5b4 (Korean)"],
+            horizontal=True,
+            key="lang_choice",
+        )
+        lang_code = "ko" if lang_choice.startswith("\ud55c") else "en"
         if uploaded:
             st.image(uploaded, use_container_width=True)
         gen_disabled = not (uploaded and has_anthropic)
@@ -296,7 +303,7 @@ with col_chat:
                 saved = _save_uploaded(uploaded, name_hint)
                 try:
                     draft = ai_analyzer.analyze_photo(
-                        saved, hint_name=name_hint or None
+                        saved, hint_name=name_hint or None, language=lang_code
                     )
                     draft.hero_image = saved.as_uri()
                     st.session_state.flower = draft

@@ -158,8 +158,20 @@ def chat(
     model = model or os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 
     flower_json = flower.model_dump_json(indent=2)
+    lang = (getattr(flower, "language", "en") or "en").lower()
+    if lang.startswith("ko"):
+        lang_directive = (
+            "\n\n=== OUTPUT LANGUAGE ===\n"
+            "This manual is written in Korean. Reply to the user in Korean and "
+            "keep all manual content (component headings, paragraphs, tips, "
+            "materials, assembly steps) in Korean when you call the "
+            "`update_flower` tool."
+        )
+    else:
+        lang_directive = ""
     system = (
         SYSTEM_PROMPT
+        + lang_directive
         + "\n\n=== CURRENT FLOWER MANUAL (JSON) ===\n"
         + flower_json
     )

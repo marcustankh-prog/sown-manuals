@@ -405,7 +405,12 @@ def _encode_image(image_path: Path) -> tuple[str, str]:
     return b64, f"image/{mime}"
 
 
-def analyze_photo(image_path: Path, *, hint_name: Optional[str] = None) -> Flower:
+def analyze_photo(
+    image_path: Path,
+    *,
+    hint_name: Optional[str] = None,
+    language: str = "en",
+) -> Flower:
     """Send the photo to the configured vision model and return a Flower draft."""
     image_path = Path(image_path)
     provider = os.getenv("AI_PROVIDER", "anthropic").lower()
@@ -417,16 +422,41 @@ def analyze_photo(image_path: Path, *, hint_name: Optional[str] = None) -> Flowe
     if hint_name:
         user_prompt += f"\nThe user calls this flower: {hint_name}.\n"
 
+    lang_directive = _language_directive(language)
+
     if provider == "openai":
-        return _analyze_openai(image_path, user_prompt)
-    return _analyze_anthropic(image_path, user_prompt)
+        flower = _analyze_openai(image_path, user_prompt, lang_directive)
+    else:
+        flower = _analyze_anthropic(image_path, user_prompt, lang_directive)
+    flower.language = language
+    return flower
+
+
+def _language_directive(language: str) -> str:
+    if (language or "").lower().startswith("ko"):
+        return (
+            "\n\n=== OUTPUT LANGUAGE ===\n"
+            "Write the ENTIRE manual in natural, fluent Korean (\ud55c\uad6d\uc5b4). "
+            "Every user-facing string in the JSON \u2014 title, intro, anatomy "
+            "descriptions, component headings, plain_description, paragraphs, "
+            "tips, notes, materials, assembly steps \u2014 must be in Korean. "
+            "Keep the JSON keys and the technique abbreviations (CL, CCL, CWL, "
+            "BF, BR, PT, RT, PB, RB) in Latin letters, but introduce each "
+            "abbreviation in Korean on first use within each component, e.g. "
+            "\u201c\uc5f0\uc18d \ub8e8\ud504 \uae30\ubc95(Continuous Loops, "
+            "\uc904\uc5ec\uc11c CL)\u201d. Use Korean punctuation conventions."
+        )
+    return (
+        "\n\n=== OUTPUT LANGUAGE ===\n"
+        "Write the entire manual in natural English."
+    )
 
 
 # ----------------------------------------------------------------------------
 # OpenAI
 # ----------------------------------------------------------------------------
 
-def _analyze_openai(image_path: Path, user_prompt: str) -> Flower:
+def _analyze_openai(image_path: Path, user_prompt: str, lang_directive: str = "") -> Flower:
     from openai import OpenAI  # lazy import
 
     client = OpenAI()
@@ -438,7 +468,7 @@ def _analyze_openai(image_path: Path, user_prompt: str) -> Flower:
         model=model,
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": SYSTEM_PROMPT + lang_directive},
             {
                 "role": "user",
                 "content": [
@@ -456,7 +486,7 @@ def _analyze_openai(image_path: Path, user_prompt: str) -> Flower:
 # Anthropic
 # ----------------------------------------------------------------------------
 
-def _analyze_anthropic(image_path: Path, user_prompt: str) -> Flower:
+def _analyze_anthropic(image_path: Path, user_prompt: str, lang_directive: str = "") -> Flower:
     import anthropic  # lazy import
 
     client = anthropic.Anthropic()
@@ -466,7 +496,7 @@ def _analyze_anthropic(image_path: Path, user_prompt: str) -> Flower:
     resp = client.messages.create(
         model=model,
         max_tokens=16000,
-        system=SYSTEM_PROMPT + "\nReturn ONLY a JSON object, no surrounding text.",
+        system=SYSTEM_PROMPT + lang_directive + "\nReturn ONLY a JSON object, no surrounding text.",
         messages=[
             {
                 "role": "user",

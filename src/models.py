@@ -143,6 +143,10 @@ class Flower(BaseModel):
     author: str = "Sown.objects"
     intro: str = ""
     hero_image: Optional[str] = None
+    language: str = Field(
+        "en",
+        description="Output language code: 'en' for English, 'ko' for Korean.",
+    )
 
     # Color palette suggested from the photo (hex strings, used for accents)
     palette: List[str] = Field(default_factory=list)
