@@ -30,6 +30,50 @@ silhouette reads convincingly as the real plant photographed — not a
 generic five-petal cartoon flower.
 
 ================================================================================
+READER — who you are writing for
+================================================================================
+The person reading this manual is a complete beginner who has never made a
+beaded flower and has not read any beading textbook. They will read the
+manual cover-to-cover with no glossary or supplementary material. Therefore:
+
+  • Use plain English. Where a technical term, abbreviation, or measurement
+    is genuinely useful, INTRODUCE IT IN PLAIN WORDS FIRST and put the term
+    in parentheses afterwards. The first appearance of every specialised
+    term within EACH component must be glossed inline. Examples:
+      "small beaded loops twisted closed at their base, all made on one
+       length of wire (this technique is called Continuous Loops, or CL
+       for short)"
+      "the very first row of beads, made in the centre of the wire (this
+       is called the Basic Row, or BR)"
+      "clip the top wires close to the petal so only the bottom wires
+       remain to form the stem (beaders call this 'reducing to 2 bottom
+       wires')"
+      "wrap each row so the beads cross over the bottom wire at a 45°
+       slant, giving the petal a pointed lower edge (this is called a
+       Pointed Bottom or PB)"
+  • After the inline gloss, you may use the short term/abbreviation freely
+    within that component. Re-gloss it the first time it appears in a
+    NEW component (the reader may skip around).
+  • Avoid telegraphic shorthand strings like "9-row BF, 10-bead BR, RT-PB"
+    as the only description. The compact shorthand is fine ONLY in a
+    parenthetical summary AFTER the plain-English description, e.g.:
+      "Make a 10-bead Basic Row in the centre, then wrap 4 rows on each
+       side for a total of 9 rows, with rounded wraps at the top and
+       45° pointed wraps at the bottom (in beader shorthand: 9-row BF,
+       10-bead BR, RT-PB)."
+  • Always give measurements in BOTH metric and imperial, e.g.
+    "3.2 cm (1¼ in)" or "50 cm (about 20 in)".
+  • Always translate wire-gauge numbers: "24 ga (0.5 mm) wire — a medium
+    weight, the most common for petals". On second mention you can
+    drop the explanation.
+  • No botanical Latin. No words like "calyx", "bract", "corolla",
+    "involucre", "ray floret". Translate them: calyx → "the small green
+    cup at the base of the bloom"; sepals → "the little green leaves
+    just under the petals"; stamens → "the tiny stalks at the centre
+    that carry pollen".
+  • Keep sentences short. Prefer two short sentences over one long one.
+
+================================================================================
 TECHNIQUE REFERENCE — the canonical six beginner techniques
 ================================================================================
 This is the menu of techniques you may use. The terminology, abbreviations,
@@ -254,33 +298,46 @@ what this part IS in beginner language.
 each starting with "1.", "2.", "3.", etc. The IMAGES IN THE MANUAL ARE
 UNLABELED, so the text must carry ALL the explanation. Required specifics:
 
-  • Step 1 ALWAYS names the technique (full name + abbreviation), the
-    wire gauge, and the wire length. Examples:
-      "1. Using the Continuous Loops (CL) technique on 24 ga (0.5 mm)
-       wire, string all the seed beads onto the wire from the spool."
-      "1. Using the Basic Frame (BF) technique on 24 ga (0.5 mm) wire,
-       cut a 50 cm length and string ~30 cm of beads onto it."
-  • Specify bead amounts the way Lauren does: by length of beads on
-    the wire (e.g. "1¼ in (3.2 cm) of beads") for CL/CCL/CWL/Fringe,
-    AND by bead count for the Basic Row of a BF petal (e.g. "10-bead
-    Basic Row"). Both styles appear in real patterns; use what fits.
+  • Step 1 ALWAYS names the technique in PLAIN WORDS, follows it with
+    the formal name + abbreviation in parentheses, and states the wire
+    gauge with its plain-English weight cue and the wire length.
+    Examples:
+      "1. You'll make these petals as small beaded loops, all on one
+       length of wire — a technique called Continuous Loops (CL). Use
+       24 ga (0.5 mm) wire (a medium weight, the standard for petals)
+       and string all the beads onto the wire from the spool."
+      "1. You'll build each petal on a beaded centre row with rows
+       wrapped around it — a technique called the Basic Frame (BF).
+       Cut a 50 cm (about 20 in) length of 24 ga (0.5 mm) wire and
+       string about 30 cm (12 in) of beads onto it."
+  • Specify bead amounts the way real patterns do: by length of beads on
+    the wire (e.g. "3.2 cm / 1¼ in of beads") for CL/CCL/CWL/Fringe,
+    AND by bead count for the Basic Row of a BF petal (e.g. "a 10-bead
+    Basic Row"). Use whichever fits the technique. Always give both
+    metric and imperial for any measurement.
   • For BF: state the BR bead count, the total row count, and the
-    shape codes. Example: "Make a 10-bead Basic Row in the centre of the
-    wire, then wrap 4 rows on each side for a total of 9 rows. Use a
-    Round Top (90° wraps at the top wire) and a Pointed Bottom (45°
-    wraps at the bottom wire) — written in shorthand as RT-PB."
-  • State exact twist counts (e.g. "twist the wires 2 full rotations
-    to lock the loop" for CL; "1 rotation only" for CWL).
-  • State shaping explicitly: cup inward with thumb, pinch tip to a
-    point, reflex edge backward — match it to the petal shape from
-    anatomy.
-  • Mention LACING as a numbered step (next-to-last) when the piece
-    meets the lacing rules. Specify the lacing wire gauge (30–32 ga)
-    and how many lacing lines.
+    shape of the top and bottom wraps in plain English first, then
+    add the shorthand in parentheses. Example: "Make a 10-bead Basic
+    Row in the centre of the wire. Then wrap 4 rows on each side for
+    a total of 9 rows. Wrap the top of each row squarely over the top
+    wire (giving a rounded top), and wrap the bottom at a 45° slant
+    (giving a pointed bottom). In beader shorthand this is RT-PB."
+  • State exact twist counts in plain words (e.g. "twist the two
+    wires together two full turns to lock the loop" for CL; "one
+    full turn only" for CWL).
+  • State shaping explicitly: "cup the petal inward by pressing your
+    thumb gently into the centre", "pinch the tip into a sharp point
+    with your fingernails", "bend the outer edge backward (this is
+    called reflexing)" — match it to the petal shape from anatomy.
+  • Mention LACING (sewing across the back of the petal with very thin
+    wire to hold the rows together) as a numbered step (next-to-last)
+    when the piece meets the lacing rules. Specify the lacing wire
+    gauge and how many lacing lines.
   • Final step always: "Repeat to make N pieces total."
-  • Reduce-to-bottom-wires step for BF: "Reduce to 2 bottom wires by
-    clipping the top wires close to the petal" (or 3 bottom wires for
-    heavy pieces).
+  • Reduce-to-bottom-wires step for BF: "Clip the two top wires close
+    to the petal so only the bottom wires remain to form the stem
+    (beaders call this 'reducing to 2 bottom wires')." Use 3 bottom
+    wires for heavier pieces.
 
 `tip`: one short beginner-friendly sentence (e.g. "Keep the spool wire
 taut as you wrap each row, otherwise the petal will twist.").
