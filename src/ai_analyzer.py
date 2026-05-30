@@ -406,13 +406,18 @@ def _encode_image(image_path: Path) -> tuple[str, str]:
 
 
 def analyze_photo(
-    image_path: Path,
+    image_path,
     *,
     hint_name: Optional[str] = None,
     language: str = "en",
     mode: str = "plant",
 ) -> Flower:
-    """Send the photo to the configured vision model and return a Flower draft.
+    """Send one or more photos to the configured vision model and return a Flower draft.
+
+    `image_path` may be a single path-like or a list of path-likes. When a list
+    is provided, the first photo is treated as the primary reference (used
+    for the cover and the photo classifier); the rest are cross-referenced
+    to enforce realism.
 
     `mode`:
       - "plant"    : the photo is a real plant; derive an anatomy-driven
@@ -420,24 +425,43 @@ def analyze_photo(
       - "recreate" : the photo is a finished beaded piece; recreate it
                      as faithfully as possible.
     """
-    image_path = Path(image_path)
+    if isinstance(image_path, (list, tuple)):
+        image_paths = [Path(p) for p in image_path if p]
+    else:
+        image_paths = [Path(image_path)]
+    if not image_paths:
+        raise ValueError("analyze_photo requires at least one image path")
+    primary = image_paths[0]
     provider = os.getenv("AI_PROVIDER", "anthropic").lower()
 
-    # Classify the photo first (cheap Haiku call). Best-effort — if it
-    # fails, fall back to whatever mode the user selected.
+    # Classify the primary photo first (cheap Haiku call). Best-effort — if
+    # it fails, fall back to whatever mode the user selected.
     classification = {"kind": "unclear", "reason": ""}
     try:
-        classification = _classify_photo(image_path)
+        classification = _classify_photo(primary)
     except Exception:  # noqa: BLE001
         pass
 
     user_prompt = (
-        "Analyze the flower in the attached photo and produce a complete pattern "
-        "manual JSON. Match the schema exactly.\n\n"
+        "Analyze the flower in the attached photo"
+        + ("s" if len(image_paths) > 1 else "")
+        + " and produce a complete pattern manual JSON. Match the schema "
+        "exactly.\n\n"
         f"Schema:\n{json.dumps(_flower_json_schema())}\n"
     )
     if hint_name:
         user_prompt += f"\nThe user calls this flower: {hint_name}.\n"
+    if len(image_paths) > 1:
+        user_prompt += (
+            f"\n{len(image_paths)} reference photos are attached. The first "
+            "is the primary view (use it for the cover); the remaining "
+            "images show the same flower from other angles, lighting, or "
+            "closer detail. CROSS-REFERENCE them to enforce realism: "
+            "resolve any conflict by trusting the photo that shows the "
+            "feature most clearly. Counts (petals, layers, leaves, stamens) "
+            "are only confirmed when at least two photos agree, or when one "
+            "photo shows the count unambiguously.\n"
+        )
 
     lang_directive = _language_directive(language)
     mode_directive = _mode_directive(mode)
@@ -445,9 +469,9 @@ def analyze_photo(
     system_addendum = lang_directive + mode_directive
 
     if provider == "openai":
-        flower = _analyze_openai(image_path, user_prompt, system_addendum)
+        flower = _analyze_openai(image_paths, user_prompt, system_addendum)
     else:
-        flower = _analyze_anthropic(image_path, user_prompt, system_addendum)
+        flower = _analyze_anthropic(image_paths, user_prompt, system_addendum)
     flower.language = language
     flower.source_kind = classification.get("kind")
     flower.source_classifier_reason = classification.get("reason")
@@ -560,13 +584,20 @@ def _classify_photo(image_path: Path) -> dict:
 # OpenAI
 # ----------------------------------------------------------------------------
 
-def _analyze_openai(image_path: Path, user_prompt: str, lang_directive: str = "") -> Flower:
+def _analyze_openai(image_paths, user_prompt: str, lang_directive: str = "") -> Flower:
     from openai import OpenAI  # lazy import
 
+    if not isinstance(image_paths, (list, tuple)):
+        image_paths = [image_paths]
     client = OpenAI()
     model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    b64, mime = _encode_image(image_path)
-    data_url = f"data:{mime};base64,{b64}"
+    image_parts = []
+    for p in image_paths:
+        b64, mime = _encode_image(Path(p))
+        image_parts.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:{mime};base64,{b64}"},
+        })
 
     resp = client.chat.completions.create(
         model=model,
@@ -577,7 +608,7 @@ def _analyze_openai(image_path: Path, user_prompt: str, lang_directive: str = ""
                 "role": "user",
                 "content": [
                     {"type": "text", "text": user_prompt},
-                    {"type": "image_url", "image_url": {"url": data_url}},
+                    *image_parts,
                 ],
             },
         ],
@@ -590,12 +621,20 @@ def _analyze_openai(image_path: Path, user_prompt: str, lang_directive: str = ""
 # Anthropic
 # ----------------------------------------------------------------------------
 
-def _analyze_anthropic(image_path: Path, user_prompt: str, lang_directive: str = "") -> Flower:
+def _analyze_anthropic(image_paths, user_prompt: str, lang_directive: str = "") -> Flower:
     import anthropic  # lazy import
 
+    if not isinstance(image_paths, (list, tuple)):
+        image_paths = [image_paths]
     client = anthropic.Anthropic()
     model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-    b64, mime = _encode_image(image_path)
+    image_blocks = []
+    for p in image_paths:
+        b64, mime = _encode_image(Path(p))
+        image_blocks.append({
+            "type": "image",
+            "source": {"type": "base64", "media_type": mime, "data": b64},
+        })
 
     resp = client.messages.create(
         model=model,
@@ -606,10 +645,7 @@ def _analyze_anthropic(image_path: Path, user_prompt: str, lang_directive: str =
                 "role": "user",
                 "content": [
                     {"type": "text", "text": user_prompt},
-                    {
-                        "type": "image",
-                        "source": {"type": "base64", "media_type": mime, "data": b64},
-                    },
+                    *image_blocks,
                 ],
             }
         ],

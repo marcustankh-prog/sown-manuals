@@ -269,9 +269,16 @@ with col_chat:
         expanded=not st.session_state.chat_messages and not flower.components,
     ):
         uploaded = st.file_uploader(
-            "Drop a flower photo here",
+            "Drop one or more flower photos here",
             type=["jpg", "jpeg", "png", "webp"],
             label_visibility="collapsed",
+            accept_multiple_files=True,
+            help=(
+                "Upload one photo, or several reference photos of the same "
+                "flower (different angles, close-ups, the leaves, the back of "
+                "a petal). The first photo becomes the cover; the rest are "
+                "cross-referenced for accuracy."
+            ),
         )
         name_hint = st.text_input(
             "What flower is this?", value=flower.name, key="name_hint"
@@ -296,7 +303,11 @@ with col_chat:
         )
         gen_mode = "recreate" if recreate_mode else "plant"
         if uploaded:
-            st.image(uploaded, use_container_width=True)
+            cols = st.columns(min(len(uploaded), 4))
+            for i, f in enumerate(uploaded):
+                with cols[i % len(cols)]:
+                    st.image(f, use_container_width=True,
+                             caption="primary" if i == 0 else f"ref {i}")
         gen_disabled = not (uploaded and has_anthropic)
         gen_label = (
             "Generate draft & illustrations"
@@ -309,18 +320,20 @@ with col_chat:
             use_container_width=True,
             type="primary",
         ):
-            with st.spinner("Analyzing photo…"):
+            with st.spinner(
+                f"Analyzing {len(uploaded)} photo{'s' if len(uploaded) != 1 else ''}\u2026"
+            ):
                 from src import ai_analyzer
 
-                saved = _save_uploaded(uploaded, name_hint)
+                saved_paths = [_save_uploaded(f, name_hint) for f in uploaded]
                 try:
                     draft = ai_analyzer.analyze_photo(
-                        saved,
+                        saved_paths,
                         hint_name=name_hint or None,
                         language=lang_code,
                         mode=gen_mode,
                     )
-                    draft.hero_image = saved.as_uri()
+                    draft.hero_image = saved_paths[0].as_uri()
                     st.session_state.flower = draft
                     library.save(draft)
                 except Exception as e:  # noqa: BLE001
