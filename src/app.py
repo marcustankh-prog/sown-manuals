@@ -182,7 +182,13 @@ with bar_r:
 
 if not has_anthropic:
     st.warning(
-        "Add `ANTHROPIC_API_KEY` to `.env` to enable AI drafting and chat editing."
+        "Add `ANTHROPIC_API_KEY` to `.env` (or Streamlit secrets) to enable AI drafting and chat editing."
+    )
+if not has_openai:
+    st.warning(
+        "Add `OPENAI_API_KEY` to `.env` (or Streamlit secrets) to enable "
+        "illustration & inspo-photo generation. Without it, all image "
+        "generation is skipped \u2014 the manual will render with text only."
     )
 
 # === Main area: chat (left) + live preview (right) ==========================
@@ -257,13 +263,30 @@ with col_chat:
                     st.session_state.flower = draft
                 except Exception as e:  # noqa: BLE001
                     st.warning(f"Text draft saved, but illustrations failed: {e}")
+                if image_generator.LAST_ERRORS:
+                    with st.expander(
+                        f"⚠️ {len(image_generator.LAST_ERRORS)} image(s) failed — details",
+                        expanded=True,
+                    ):
+                        for err in image_generator.LAST_ERRORS:
+                            st.code(err, language="text")
+            else:
+                st.info(
+                    "Text draft generated. Add `OPENAI_API_KEY` to enable "
+                    "illustration generation."
+                )
             st.rerun()
 
-        if flower.components and has_openai:
+        if flower.components:
             if st.button(
                 "Regenerate illustrations",
                 use_container_width=True,
-                help="Uses OpenAI's image API (~$0.04 per image).",
+                disabled=not has_openai,
+                help=(
+                    "Uses OpenAI's image API (~$0.04 per image)."
+                    if has_openai
+                    else "Add OPENAI_API_KEY to enable."
+                ),
             ):
                 from src import image_generator
 
@@ -287,9 +310,17 @@ with col_chat:
                     )
                     st.session_state.flower = flower
                     bar.progress(1.0, text="Done.")
-                    st.rerun()
                 except Exception as e:  # noqa: BLE001
                     st.error(f"Image generation failed: {e}")
+                if image_generator.LAST_ERRORS:
+                    with st.expander(
+                        f"⚠️ {len(image_generator.LAST_ERRORS)} image(s) failed — details",
+                        expanded=True,
+                    ):
+                        for err in image_generator.LAST_ERRORS:
+                            st.code(err, language="text")
+                else:
+                    st.rerun()
 
     # ---- Chat ------------------------------------------------------------
     chat_box = st.container(height=480)

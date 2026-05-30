@@ -20,9 +20,17 @@ from typing import Iterable, Optional
 
 from .models import AssemblySection, Component, ComponentImage, Flower
 
+# Module-level buffer of human-readable errors from the most recent
+# generate_for_flower() call. The Streamlit UI reads this so per-image API
+# failures (rate limits, org-verification, etc.) are visible instead of only
+# going to stderr.
+LAST_ERRORS: list[str] = []
+
 
 def _log_image_error(label: str, exc: BaseException) -> None:
     """Print image-API errors to stderr (visible in the Streamlit terminal)."""
+    msg = f"{label}: {type(exc).__name__}: {exc}"
+    LAST_ERRORS.append(msg)
     print(
         f"[image_generator] {label} FAILED: {type(exc).__name__}: {exc}",
         file=sys.stderr,
@@ -222,6 +230,8 @@ def generate_for_flower(
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("OPENAI_API_KEY is missing \u2014 add it to .env.")
     model = model or os.getenv("OPENAI_IMAGE_MODEL", "gpt-image-1")
+
+    LAST_ERRORS.clear()
 
     active = set(scopes) if scopes else set(SCOPES_ALL)
     invalid = active - set(SCOPES_ALL)
