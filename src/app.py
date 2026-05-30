@@ -96,7 +96,212 @@ def _img_src(path_or_uri: str) -> str:
 
 # ---------- UI ---------------------------------------------------------------
 
-st.set_page_config(page_title="Beaded Flower Manual", page_icon="🌸", layout="wide")
+st.set_page_config(page_title="SOWN — Beaded Flower Manual", page_icon="🌿", layout="wide")
+
+# === Brand styling (Sown.objects identity) ===================================
+
+st.markdown(
+    """
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --sage: #8A9180;
+        --sage-dark: #6B7164;
+        --sage-light: #C4CABD;
+        --sage-pale: #EEF0EB;
+        --cream: #F5F0E8;
+        --cream-dark: #E8E0D0;
+        --parchment: #F9F6F0;
+        --blush: #D4B8A8;
+        --terracotta: #B8826A;
+        --moss: #5C6652;
+        --ink: #2A2B27;
+        --muted: #7A7B75;
+        --serif: 'Cormorant Garamond', Georgia, serif;
+        --sans: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      html, body, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"] {
+        font-family: var(--sans) !important;
+        font-weight: 300;
+        color: var(--ink);
+      }
+
+      [data-testid="stAppViewContainer"] { background: var(--parchment); }
+      [data-testid="stHeader"] { background: transparent; }
+
+      /* SOWN wordmark header */
+      .sown-header {
+        text-align: left;
+        padding: 1.5rem 0 0.5rem 0;
+        border-bottom: 1px solid var(--cream-dark);
+        margin-bottom: 1.5rem;
+      }
+      .sown-wordmark {
+        font-family: var(--serif);
+        font-size: 3.5rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        color: var(--ink);
+        line-height: 1;
+        margin: 0;
+      }
+      .sown-tagline {
+        font-family: var(--sans);
+        font-size: 0.65rem;
+        font-weight: 400;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 0.6rem;
+      }
+      .sown-divider {
+        width: 32px;
+        height: 1px;
+        background: var(--sage-light);
+        margin: 0.85rem 0;
+      }
+      .sown-subtitle {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 1.05rem;
+        color: var(--sage-dark);
+        margin: 0 0 0.5rem 0;
+      }
+
+      /* Headings */
+      h1, h2, h3, h4 {
+        font-family: var(--serif) !important;
+        font-weight: 400 !important;
+        color: var(--ink);
+        letter-spacing: 0.01em;
+      }
+
+      /* Buttons — quiet, square-ish, sage */
+      .stButton > button, .stDownloadButton > button {
+        font-family: var(--sans) !important;
+        font-weight: 400 !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border-radius: 2px !important;
+        border: 1px solid var(--cream-dark) !important;
+        background: var(--cream) !important;
+        color: var(--ink) !important;
+        padding: 0.55rem 1rem !important;
+        transition: all 0.2s ease;
+      }
+      .stButton > button:hover, .stDownloadButton > button:hover {
+        border-color: var(--sage) !important;
+        background: var(--sage-pale) !important;
+        color: var(--sage-dark) !important;
+      }
+      .stButton > button[kind="primary"] {
+        background: var(--sage) !important;
+        border-color: var(--sage) !important;
+        color: var(--cream) !important;
+      }
+      .stButton > button[kind="primary"]:hover {
+        background: var(--sage-dark) !important;
+        border-color: var(--sage-dark) !important;
+        color: var(--cream) !important;
+      }
+      .stButton > button:disabled {
+        opacity: 0.45;
+      }
+
+      /* Inputs */
+      .stTextInput input, .stTextArea textarea, .stChatInput textarea {
+        font-family: var(--sans) !important;
+        background: var(--cream) !important;
+        border: 1px solid var(--cream-dark) !important;
+        border-radius: 2px !important;
+        color: var(--ink) !important;
+      }
+      .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: var(--sage) !important;
+        box-shadow: none !important;
+      }
+
+      /* File uploader */
+      [data-testid="stFileUploaderDropzone"] {
+        background: var(--cream) !important;
+        border: 1px dashed var(--sage-light) !important;
+        border-radius: 2px !important;
+      }
+
+      /* Chat messages */
+      [data-testid="stChatMessage"] {
+        background: var(--cream) !important;
+        border: 1px solid var(--cream-dark);
+        border-radius: 2px;
+        padding: 0.75rem 1rem;
+      }
+      [data-testid="stChatMessage"] p {
+        font-family: var(--sans);
+        line-height: 1.7;
+      }
+
+      /* Captions / small labels — uppercase muted */
+      [data-testid="stCaptionContainer"], .stCaption, [data-testid="stMarkdownContainer"] small {
+        font-family: var(--sans) !important;
+        font-size: 0.72rem !important;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--muted) !important;
+      }
+
+      /* Expander */
+      [data-testid="stExpander"] {
+        border: 1px solid var(--cream-dark) !important;
+        border-radius: 2px !important;
+        background: var(--cream) !important;
+      }
+      [data-testid="stExpander"] summary {
+        font-family: var(--sans) !important;
+        font-weight: 400 !important;
+        font-size: 0.78rem !important;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ink) !important;
+      }
+
+      /* Sliders */
+      .stSlider [data-baseweb="slider"] div[role="slider"] {
+        background: var(--sage) !important;
+        border-color: var(--sage-dark) !important;
+      }
+
+      /* Progress bar */
+      .stProgress > div > div > div { background: var(--sage) !important; }
+
+      /* Alerts — soft sage / blush rather than harsh blue/yellow */
+      [data-testid="stAlertContentInfo"] { background: var(--sage-pale) !important; color: var(--moss) !important; }
+      [data-testid="stAlertContentWarning"] { background: #F5E8DC !important; color: var(--terracotta) !important; }
+      [data-testid="stAlertContentError"] { background: #F5E0D8 !important; color: #8a4a35 !important; }
+      [data-testid="stAlertContentSuccess"] { background: var(--sage-pale) !important; color: var(--moss) !important; }
+
+      /* Popover */
+      [data-testid="stPopover"] button {
+        background: transparent !important;
+        border: 1px solid var(--cream-dark) !important;
+      }
+
+      /* Iframe (live preview) — soft frame */
+      iframe {
+        border: 1px solid var(--cream-dark) !important;
+        border-radius: 2px;
+        background: var(--parchment);
+      }
+
+      /* Hide the default Streamlit hamburger / footer for a cleaner look */
+      footer { visibility: hidden; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 flower = _ensure_state()
 
@@ -109,13 +314,19 @@ has_openai = bool(os.getenv("OPENAI_API_KEY"))
 
 bar_l, bar_r = st.columns([0.85, 0.15])
 with bar_l:
-    st.title("🌸 Beaded Flower Manual")
-    st.caption(
-        "Upload a photo, get an AI draft, then chat to refine it. "
-        "The preview on the right updates as you edit."
+    st.markdown(
+        """
+        <div class="sown-header">
+          <h1 class="sown-wordmark">SOWN</h1>
+          <div class="sown-tagline">Beaded Flowers &amp; Botanical Artistry</div>
+          <div class="sown-divider"></div>
+          <p class="sown-subtitle">A quiet studio for crafting beaded-flower manuals — one bead, one petal at a time.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 with bar_r:
-    with st.popover("⚙ Settings", use_container_width=True):
+    with st.popover("Settings", use_container_width=True):
         st.caption("Illustration counts (used when generating images).")
         n_per_comp = st.slider("Images per component", 0, 3, 2, key="cfg_per_comp")
         n_assembly = st.slider("Assembly images", 0, 3, 2, key="cfg_assembly")
@@ -139,7 +350,7 @@ with bar_r:
             st.rerun()
         st.divider()
         st.download_button(
-            "⬇ Download JSON spec",
+            "Download JSON spec",
             data=flower.model_dump_json(indent=2),
             file_name=f"{flower.name.lower().replace(' ', '_')}.json",
             mime="application/json",
@@ -173,7 +384,7 @@ col_chat, col_preview = st.columns([0.42, 0.58], gap="large")
 with col_chat:
     # ---- Photo + Generate (chat-first onboarding) -----------------------
     with st.expander(
-        "📷 Start from a photo",
+        "Start from a photo",
         expanded=not st.session_state.chat_messages and not flower.components,
     ):
         uploaded = st.file_uploader(
@@ -188,7 +399,7 @@ with col_chat:
             st.image(uploaded, use_container_width=True)
         gen_disabled = not (uploaded and has_anthropic)
         if st.button(
-            "✨ Generate draft + illustrations from photo",
+            "Generate draft & illustrations",
             disabled=gen_disabled,
             use_container_width=True,
             type="primary",
@@ -236,7 +447,7 @@ with col_chat:
 
         if flower.components and has_openai:
             if st.button(
-                "🎨 Regenerate illustrations",
+                "Regenerate illustrations",
                 use_container_width=True,
                 help="Uses OpenAI's image API (~$0.04 per image).",
             ):
@@ -365,7 +576,7 @@ with col_preview:
     with pcol1:
         st.markdown("**Live preview**")
     with pcol2:
-        if st.button("🖨 Generate PDF", use_container_width=True, type="primary"):
+        if st.button("Generate PDF", use_container_width=True, type="primary"):
             with st.spinner("Rendering PDF…"):
                 try:
                     out = OUTPUT / f"{flower.name.lower().replace(' ', '_')}_manual.pdf"
@@ -381,7 +592,7 @@ with col_preview:
     dl_l, dl_r = st.columns(2)
     with dl_l:
         st.download_button(
-            "⬇ Download HTML",
+            "Download HTML",
             data=html,
             file_name=f"{flower.name.lower().replace(' ', '_')}_manual.html",
             mime="text/html",
@@ -391,7 +602,7 @@ with col_preview:
         if last_pdf and Path(last_pdf).exists():
             with open(last_pdf, "rb") as fh:
                 st.download_button(
-                    "⬇ Download PDF",
+                    "Download PDF",
                     data=fh.read(),
                     file_name=Path(last_pdf).name,
                     mime="application/pdf",

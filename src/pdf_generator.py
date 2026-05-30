@@ -92,7 +92,7 @@ def _accent_for(flower: Flower) -> Tuple[str, str]:
     # or the default sage if nothing in the palette is readable.
     accent = next(
         (c for c in (flower.palette or []) if _luminance(c) < 0.7),
-        "#6f8260",
+        "#8A9180",
     )
     return accent, _hex_lighten(accent, 0.85)
 

@@ -1,25 +1,35 @@
 /* Beaded Flower Manual — print stylesheet (A4 portrait).
-   Modeled on Henri Purnell's Spring Bouquet pattern: large serif titles,
-   airy spacing, soft sage/cream palette, two-column materials block. */
+   Sown.objects identity: Cormorant Garamond + Jost, sage/cream/parchment
+   palette, hairline dividers, generous whitespace. */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
 
 @page {
   size: A4;
   margin: 18mm 16mm 16mm 16mm;
   @bottom-right {
     content: counter(page);
-    font-family: "Georgia", "Cormorant Garamond", serif;
-    font-size: 9pt;
-    color: #8a8a82;
+    font-family: "Jost", "Helvetica", sans-serif;
+    font-size: 8pt;
+    letter-spacing: 0.2em;
+    color: #7A7B75;
   }
 }
 
 :root {
-  --ink: #2d2a26;
-  --muted: #6b675f;
-  --rule: #d9d3c7;
-  --paper: #ffffff;
-  --accent: #6f8260;       /* sage green, replaced per-flower via inline style */
-  --accent-soft: #eef0e6;
+  --ink: #2A2B27;
+  --muted: #7A7B75;
+  --rule: #E8E0D0;
+  --paper: #F9F6F0;
+  --cream: #F5F0E8;
+  --sage: #8A9180;
+  --sage-dark: #6B7164;
+  --sage-light: #C4CABD;
+  --sage-pale: #EEF0EB;
+  --blush: #D4B8A8;
+  --terracotta: #B8826A;
+  --accent: #8A9180;        /* sage; replaced per-flower via inline style */
+  --accent-soft: #EEF0EB;
 }
 
 * { box-sizing: border-box; }
@@ -29,14 +39,15 @@ html, body {
   padding: 0;
   color: var(--ink);
   background: var(--paper);
-  font-family: "Georgia", "Cormorant Garamond", "Times New Roman", serif;
+  font-family: "Jost", -apple-system, BlinkMacSystemFont, "Helvetica", sans-serif;
+  font-weight: 300;
   font-size: 10.5pt;
-  line-height: 1.5;
+  line-height: 1.7;
 }
 
 h1, h2, h3, .display {
-  font-family: "Cormorant Garamond", "Playfair Display", "Georgia", serif;
-  font-weight: 500;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
   letter-spacing: 0.01em;
   color: var(--ink);
 }
@@ -45,7 +56,8 @@ h1.cover-title {
   font-size: 38pt;
   line-height: 1.05;
   margin: 0 0 6pt 0;
-  font-weight: 400;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .byline {
@@ -53,19 +65,26 @@ h1.cover-title {
   color: var(--muted);
   margin-bottom: 18pt;
   font-size: 11pt;
+  font-family: "Cormorant Garamond", Georgia, serif;
 }
 
 h2.section {
-  font-size: 16pt;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 17pt;
   margin: 0 0 6pt 0;
   font-weight: 500;
+  font-style: italic;
   color: var(--accent);
+  letter-spacing: 0.01em;
 }
 
 h3.subsection {
-  font-size: 12pt;
-  margin: 12pt 0 4pt 0;
-  font-weight: 600;
+  font-family: "Jost", sans-serif;
+  font-size: 8.5pt;
+  margin: 14pt 0 4pt 0;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--ink);
 }
 
@@ -162,10 +181,13 @@ p { margin: 0 0 8pt 0; }
 }
 
 .component h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
   color: var(--accent);
-  font-size: 13pt;
+  font-size: 14pt;
+  font-style: italic;
   margin: 0 0 4pt 0;
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .component .count {
@@ -186,13 +208,13 @@ p { margin: 0 0 8pt 0; }
 .callout {
   margin: 6pt 0;
   padding: 6pt 10pt;
-  background: #fff;
+  background: var(--cream);
   border-left: 2pt solid var(--accent);
   font-size: 9.5pt;
   color: var(--muted);
 }
-.callout.tip { border-left-color: #c9a14a; }
-.callout.note { border-left-color: #8a8a82; }
+.callout.tip { border-left-color: var(--terracotta); }
+.callout.note { border-left-color: var(--sage-light); }
 .callout strong { color: var(--ink); }
 
 .image-row {
@@ -206,7 +228,7 @@ p { margin: 0 0 8pt 0; }
   width: 100%;
   height: 55mm;
   object-fit: contain;
-  background: #fbf8f1;
+  background: var(--cream);
   border-radius: 2pt;
 }
 .image-row figcaption {
@@ -232,11 +254,14 @@ p { margin: 0 0 8pt 0; }
   border-radius: 2pt;
 }
 .inspo-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
   font-size: 28pt;
+  font-weight: 400;
   text-align: center;
   margin: 18pt 0 6pt 0;
   font-style: italic;
   color: var(--accent);
+  letter-spacing: 0.02em;
 }
 
 /* ---- Copyright page -------------------------------------------------- */
