@@ -460,7 +460,7 @@ def _analyze_anthropic(image_path: Path, user_prompt: str) -> Flower:
     import anthropic  # lazy import
 
     client = anthropic.Anthropic()
-    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929")
+    model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
     b64, mime = _encode_image(image_path)
 
     resp = client.messages.create(
