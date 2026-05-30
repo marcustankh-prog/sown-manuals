@@ -1,17 +1,25 @@
-/* Beaded Flower Manual — print stylesheet (A4 portrait).
-   Sown.objects identity: Cormorant Garamond + Jost, sage/cream/parchment
-   palette, hairline dividers, generous whitespace. */
+/* Beaded Flower Manual — Sown.objects print stylesheet (A4 portrait).
+   Cormorant Garamond + Jost · sage / cream / parchment · hairline dividers. */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap');
 
 @page {
   size: A4;
-  margin: 18mm 16mm 16mm 16mm;
+  margin: 20mm 18mm 18mm 18mm;
+  @bottom-center {
+    content: "SOWN";
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-weight: 600;
+    font-size: 8pt;
+    letter-spacing: 0.32em;
+    color: #C4CABD;
+  }
   @bottom-right {
     content: counter(page);
     font-family: "Jost", "Helvetica", sans-serif;
+    font-weight: 400;
     font-size: 8pt;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.18em;
     color: #7A7B75;
   }
 }
@@ -22,13 +30,16 @@
   --rule: #E8E0D0;
   --paper: #F9F6F0;
   --cream: #F5F0E8;
+  --cream-dark: #E8E0D0;
   --sage: #8A9180;
   --sage-dark: #6B7164;
   --sage-light: #C4CABD;
   --sage-pale: #EEF0EB;
   --blush: #D4B8A8;
+  --blush-light: #EDD9CE;
   --terracotta: #B8826A;
-  --accent: #8A9180;        /* sage; replaced per-flower via inline style */
+  --moss: #5C6652;
+  --accent: #8A9180;
   --accent-soft: #EEF0EB;
 }
 
@@ -42,60 +53,21 @@ html, body {
   font-family: "Jost", -apple-system, BlinkMacSystemFont, "Helvetica", sans-serif;
   font-weight: 300;
   font-size: 10.5pt;
-  line-height: 1.7;
-}
-
-h1, h2, h3, .display {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: var(--ink);
-}
-
-h1.cover-title {
-  font-size: 38pt;
-  line-height: 1.05;
-  margin: 0 0 6pt 0;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-.byline {
-  font-style: italic;
-  color: var(--muted);
-  margin-bottom: 18pt;
-  font-size: 11pt;
-  font-family: "Cormorant Garamond", Georgia, serif;
-}
-
-h2.section {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 17pt;
-  margin: 0 0 6pt 0;
-  font-weight: 500;
-  font-style: italic;
-  color: var(--accent);
-  letter-spacing: 0.01em;
-}
-
-h3.subsection {
-  font-family: "Jost", sans-serif;
-  font-size: 8.5pt;
-  margin: 14pt 0 4pt 0;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink);
+  line-height: 1.75;
 }
 
 p { margin: 0 0 8pt 0; }
+em, i { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 400; }
+strong { font-weight: 500; color: var(--ink); }
+
+a { color: var(--sage-dark); text-decoration: none; border-bottom: 0.4pt solid var(--sage-light); }
 
 /* ---- Page primitives -------------------------------------------------- */
 
 .page {
   page-break-after: always;
   break-after: page;
-  min-height: 257mm; /* A4 minus margins */
+  min-height: 257mm;
   position: relative;
 }
 .page:last-child { page-break-after: auto; }
@@ -103,15 +75,90 @@ p { margin: 0 0 8pt 0; }
 .rule {
   border: none;
   border-top: 0.5pt solid var(--rule);
+  margin: 14pt 0;
+}
+
+.hairline {
+  width: 32pt;
+  height: 0.6pt;
+  background: var(--sage-light);
+  border: none;
   margin: 10pt 0;
 }
 
+/* Section label — tiny uppercase Jost (brand "01 — Brand Story") */
+.section-label {
+  display: block;
+  font-family: "Jost", sans-serif;
+  font-weight: 500;
+  font-size: 7.5pt;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 8pt 0;
+}
+
+/* Section title — Cormorant 400, ink */
+h2.section {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  font-size: 26pt;
+  line-height: 1.15;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  margin: 0 0 4pt 0;
+}
+
+.section-intro {
+  font-size: 10pt;
+  color: var(--muted);
+  max-width: 150mm;
+  line-height: 1.75;
+  margin: 0 0 14pt 0;
+}
+
+h3 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; }
+
 /* ---- Cover page ------------------------------------------------------- */
 
-.cover {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  height: 100%;
+.cover { display: grid; grid-template-rows: auto 1fr auto; height: 100%; }
+
+.cover-brand {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 600;
+  font-size: 11pt;
+  letter-spacing: 0.32em;
+  color: var(--sage-dark);
+  margin: 0 0 4pt 0;
+}
+
+.cover-eyebrow {
+  font-family: "Jost", sans-serif;
+  font-weight: 500;
+  font-size: 7.5pt;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 22pt 0;
+}
+
+h1.cover-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  font-size: 44pt;
+  line-height: 1.05;
+  letter-spacing: 0.005em;
+  color: var(--ink);
+  margin: 0 0 6pt 0;
+}
+
+.byline {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--sage-dark);
+  font-size: 12pt;
+  margin: 0 0 18pt 0;
 }
 
 .cover .hero {
@@ -119,109 +166,164 @@ p { margin: 0 0 8pt 0; }
   max-height: 95mm;
   object-fit: cover;
   border-radius: 2pt;
-  margin: 8pt 0 14pt 0;
+  margin: 6pt 0 16pt 0;
 }
 
 .intro-text {
   font-size: 10.5pt;
   color: var(--ink);
   max-width: 165mm;
+  line-height: 1.85;
 }
 
+/* Materials — brand value-card */
 .materials-block {
-  margin-top: 12pt;
-  padding: 10pt 12pt;
-  background: var(--accent-soft);
-  border-left: 2pt solid var(--accent);
+  margin-top: 16pt;
+  padding: 14pt 16pt;
+  background: var(--cream);
+  border: 0.5pt solid var(--cream-dark);
+  border-radius: 2pt;
 }
 
 .materials-block h3 {
-  margin: 0 0 6pt 0;
-  font-size: 12pt;
-  color: var(--accent);
-  font-weight: 600;
+  font-family: "Jost", sans-serif;
+  font-weight: 500;
+  font-size: 8pt;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 8pt 0;
 }
 
 .materials-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  column-gap: 14pt;
-  row-gap: 2pt;
+  column-gap: 16pt;
+  row-gap: 3pt;
   font-size: 10pt;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .materials-grid li {
-  list-style: "•  ";
-  margin-left: 12pt;
-  padding: 1pt 0;
+  position: relative;
+  padding: 1pt 0 1pt 10pt;
+}
+.materials-grid li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8pt;
+  width: 4pt;
+  height: 0.6pt;
+  background: var(--sage-light);
 }
 
 .video-link {
-  margin-top: 10pt;
-  font-size: 10pt;
+  margin-top: 12pt;
+  font-size: 9.5pt;
   color: var(--muted);
+  font-style: italic;
 }
-.video-link a { color: var(--accent); text-decoration: none; }
 
-.palette-strip {
-  display: flex;
-  gap: 4pt;
-  margin-top: 8pt;
-}
+.palette-strip { display: flex; gap: 5pt; margin-top: 12pt; }
 .palette-strip .swatch {
   width: 14pt; height: 14pt;
   border-radius: 50%;
-  border: 0.4pt solid var(--rule);
+  border: 0.4pt solid var(--sage-light);
 }
 
-/* ---- Instruction pages ----------------------------------------------- */
+/* ---- Anatomy / Section page -------------------------------------------- */
 
-.component {
-  margin-bottom: 14pt;
-}
-
-.component h3 {
+figure.anatomy { margin: 12pt 0; text-align: center; }
+figure.anatomy img { max-width: 100%; max-height: 520pt; }
+figure.anatomy figcaption,
+.image-row figcaption {
   font-family: "Cormorant Garamond", Georgia, serif;
-  color: var(--accent);
-  font-size: 14pt;
   font-style: italic;
-  margin: 0 0 4pt 0;
-  font-weight: 500;
+  font-size: 9pt;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 4pt;
   letter-spacing: 0.01em;
 }
 
-.component .count {
+/* ---- Component blocks -------------------------------------------------- */
+
+.component {
+  margin-bottom: 18pt;
+  padding-bottom: 12pt;
+  border-bottom: 0.4pt solid var(--cream-dark);
+}
+.component:last-child { border-bottom: none; }
+
+.component h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
   font-style: italic;
-  color: var(--muted);
-  font-size: 10pt;
-  margin-bottom: 4pt;
+  font-weight: 500;
+  font-size: 16pt;
+  color: var(--sage-dark);
+  letter-spacing: 0.005em;
+  margin: 0 0 4pt 0;
 }
 
-.component .plain-desc {
-  margin: 0 0 6pt 0;
+.component .count {
+  font-family: "Jost", sans-serif;
+  font-weight: 400;
+  font-size: 7.5pt;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
   color: var(--muted);
-  font-size: 10.5pt;
-  border-left: 2pt solid var(--accent-soft);
-  padding-left: 8pt;
+  margin: 0 0 8pt 0;
 }
+
+/* Brand "tone-example" treatment for the plain-language description */
+.component .plain-desc {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 11.5pt;
+  line-height: 1.55;
+  color: var(--moss);
+  background: var(--sage-pale);
+  border: 0.4pt solid var(--sage-light);
+  border-radius: 2pt;
+  padding: 8pt 12pt;
+  margin: 0 0 10pt 0;
+}
+.component .plain-desc em { font-style: normal; }
 
 .callout {
-  margin: 6pt 0;
-  padding: 6pt 10pt;
+  margin: 8pt 0;
+  padding: 8pt 12pt;
   background: var(--cream);
-  border-left: 2pt solid var(--accent);
+  border: 0.4pt solid var(--cream-dark);
+  border-left: 1.5pt solid var(--sage);
+  border-radius: 2pt;
   font-size: 9.5pt;
   color: var(--muted);
 }
 .callout.tip { border-left-color: var(--terracotta); }
 .callout.note { border-left-color: var(--sage-light); }
-.callout strong { color: var(--ink); }
+.callout strong {
+  font-family: "Jost", sans-serif;
+  font-weight: 500;
+  font-size: 7.5pt;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink);
+  display: inline-block;
+  margin-right: 4pt;
+}
+
+/* ---- Image rows -------------------------------------------------------- */
 
 .image-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(50mm, 1fr));
-  gap: 6pt;
-  margin: 8pt 0;
+  gap: 8pt;
+  margin: 10pt 0;
 }
 .image-row figure { margin: 0; }
 .image-row img {
@@ -229,47 +331,67 @@ p { margin: 0 0 8pt 0; }
   height: 55mm;
   object-fit: contain;
   background: var(--cream);
+  border: 0.4pt solid var(--cream-dark);
   border-radius: 2pt;
 }
-.image-row figcaption {
-  font-size: 8.5pt;
+
+/* ---- Inspo gallery ----------------------------------------------------- */
+
+.inspo-eyebrow {
+  font-family: "Jost", sans-serif;
+  font-weight: 500;
+  font-size: 7.5pt;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
   color: var(--muted);
   text-align: center;
-  margin-top: 2pt;
+  margin: 18pt 0 4pt 0;
+}
+.inspo-title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
   font-style: italic;
+  font-size: 32pt;
+  text-align: center;
+  margin: 0 0 14pt 0;
+  color: var(--ink);
+  letter-spacing: 0.01em;
 }
-
-/* ---- Inspo gallery --------------------------------------------------- */
-
-.inspo {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6pt;
-  margin-top: 10pt;
-}
+.inspo { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; margin-top: 10pt; }
 .inspo img {
   width: 100%;
   height: 110mm;
   object-fit: cover;
+  border: 0.4pt solid var(--cream-dark);
   border-radius: 2pt;
 }
-.inspo-title {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 28pt;
-  font-weight: 400;
-  text-align: center;
-  margin: 18pt 0 6pt 0;
-  font-style: italic;
-  color: var(--accent);
-  letter-spacing: 0.02em;
-}
 
-/* ---- Copyright page -------------------------------------------------- */
+/* ---- Copyright page ---------------------------------------------------- */
 
 .copyright {
-  font-size: 9pt;
-  color: var(--muted);
-  margin-top: 30pt;
+  margin-top: 40pt;
   max-width: 150mm;
+  font-size: 9.5pt;
+  color: var(--muted);
+  line-height: 1.8;
 }
-.copyright h2 { color: var(--ink); font-size: 14pt; margin-bottom: 6pt; }
+.copyright .section-label { margin-bottom: 12pt; }
+.copyright h2 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  font-size: 20pt;
+  color: var(--ink);
+  margin: 0 0 4pt 0;
+  letter-spacing: 0.005em;
+}
+.copyright .hairline { margin: 14pt 0 18pt 0; }
+.copyright p { margin: 0 0 10pt 0; }
+
+.copyright-mark {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 600;
+  font-size: 14pt;
+  letter-spacing: 0.32em;
+  color: var(--sage);
+  margin-top: 30pt;
+}

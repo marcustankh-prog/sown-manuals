@@ -1,4 +1,4 @@
-{# Beaded Flower Manual — single-flower template.
+{# Beaded Flower Manual — single-flower template (Sown.objects).
    Variables: see src/models.py (Flower).
    `accent` is a hex color string injected from the flower's palette. #}
 <!doctype html>
@@ -14,8 +14,11 @@
 {# -------------------- COVER -------------------- #}
 <section class="page cover">
   <header>
+    <div class="cover-brand">SOWN</div>
+    <div class="cover-eyebrow">Beaded Flower Pattern</div>
     <h1 class="cover-title">{{ flower.title }}</h1>
-    <div class="byline">pattern by {{ flower.author }}</div>
+    <hr class="hairline">
+    <div class="byline">a pattern by {{ flower.author }}</div>
   </header>
 
   <div>
@@ -36,7 +39,7 @@
     {% if flower.materials %}
       <div class="materials-block">
         <h3>Materials</h3>
-        {% if flower.yields %}<p style="margin:0 0 6pt 0; font-size:9.5pt; color:var(--muted);">{{ flower.yields }}</p>{% endif %}
+        {% if flower.yields %}<p style="margin:0 0 8pt 0; font-size:9.5pt; color:var(--muted); font-style:italic;">{{ flower.yields }}</p>{% endif %}
         <ul class="materials-grid">
           {% for m in flower.materials %}
             <li>{{ m.name }}{% if m.quantity %} <span style="color:var(--muted)">({{ m.quantity }})</span>{% endif %}</li>
@@ -47,8 +50,7 @@
 
     {% if flower.guided_video_url %}
       <p class="video-link">
-        <strong>Guided Video Tutorial:</strong>
-        <a href="{{ flower.guided_video_url }}">{{ flower.guided_video_url }}</a>
+        Guided video tutorial — <a href="{{ flower.guided_video_url }}">{{ flower.guided_video_url }}</a>
       </p>
     {% endif %}
   </div>
@@ -57,13 +59,14 @@
 {# -------------------- ANATOMY DIAGRAM -------------------- #}
 {% if flower.anatomy_diagram %}
 <section class="page">
+  <span class="section-label">01 — Anatomy</span>
   <h2 class="section">The parts you'll be making</h2>
-  <hr class="rule">
-  <p>Here's an overview of every piece you'll bead before assembling the
-  finished {{ flower.name|lower }}. Each labeled part below has its own
+  <hr class="hairline">
+  <p class="section-intro">An overview of every piece you'll bead before assembling the
+  finished {{ flower.name|lower }}. Each labelled part below has its own
   step-by-step section in the pages that follow.</p>
-  <figure style="margin: 12pt 0; text-align:center;">
-    <img src="{{ flower.anatomy_diagram.path }}" alt="Parts of the {{ flower.name }}" style="max-width:100%; max-height:520pt;">
+  <figure class="anatomy">
+    <img src="{{ flower.anatomy_diagram.path }}" alt="Parts of the {{ flower.name }}">
     {% if flower.anatomy_diagram.caption %}
       <figcaption>{{ flower.anatomy_diagram.caption }}</figcaption>
     {% endif %}
@@ -75,26 +78,27 @@
 {% for c in flower.components %}
 <section class="page">
   {% if loop.first %}
+    <span class="section-label">02 — Components</span>
     <h2 class="section">How to make the {{ flower.name }}</h2>
-    <hr class="rule">
+    <hr class="hairline">
   {% endif %}
 
   <article class="component">
     <h3>{{ c.heading }}</h3>
-    {% if c.plain_description %}
-      <p class="plain-desc"><em>{{ c.plain_description }}</em></p>
-    {% endif %}
     {% if c.count_label %}<div class="count">{{ c.count_label }}</div>{% endif %}
+    {% if c.plain_description %}
+      <p class="plain-desc">{{ c.plain_description }}</p>
+    {% endif %}
 
     {% for para in c.paragraphs %}
       <p>{{ para }}</p>
     {% endfor %}
 
     {% if c.tip %}
-      <div class="callout tip"><strong>Tip:</strong> {{ c.tip }}</div>
+      <div class="callout tip"><strong>Tip</strong> {{ c.tip }}</div>
     {% endif %}
     {% if c.note %}
-      <div class="callout note"><strong>Note:</strong> {{ c.note }}</div>
+      <div class="callout note"><strong>Note</strong> {{ c.note }}</div>
     {% endif %}
 
     {% if c.images %}
@@ -114,8 +118,9 @@
 {# -------------------- ASSEMBLY -------------------- #}
 {% if flower.assembly %}
 <section class="page">
+  <span class="section-label">03 — Assembly</span>
   <h2 class="section">{{ flower.assembly.heading }}</h2>
-  <hr class="rule">
+  <hr class="hairline">
   {% for para in flower.assembly.paragraphs %}
     <p>{{ para }}</p>
   {% endfor %}
@@ -135,7 +140,8 @@
 {# -------------------- INSPO -------------------- #}
 {% if flower.inspo_images %}
 <section class="page">
-  <div class="inspo-title">{{ flower.name }} Inspo</div>
+  <div class="inspo-eyebrow">04 — Inspiration</div>
+  <div class="inspo-title">{{ flower.name }}</div>
   <div class="inspo">
     {% for img in flower.inspo_images %}
       <img src="{{ img.path }}" alt="">
@@ -147,7 +153,9 @@
 {# -------------------- COPYRIGHT -------------------- #}
 <section class="page">
   <div class="copyright">
+    <span class="section-label">Colophon</span>
     <h2>Copyright &amp; Terms of Use</h2>
+    <hr class="hairline">
     {% if flower.copyright_text %}
       <p>{{ flower.copyright_text }}</p>
     {% else %}
@@ -155,6 +163,7 @@
          All rights reserved. For personal use only — please do not redistribute, resell, or share the
          video tutorials. Thank you for supporting handmade pattern designers.</p>
     {% endif %}
+    <div class="copyright-mark">SOWN</div>
   </div>
 </section>
 
