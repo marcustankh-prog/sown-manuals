@@ -140,7 +140,7 @@ class Flower(BaseModel):
     # Cover / intro
     name: str = Field(..., description='e.g. "Daisy"')
     title: str = Field(..., description='e.g. "French Beaded Daisy"')
-    author: str = "Henri Purnell"
+    author: str = "Sown.objects"
     intro: str = ""
     guided_video_url: Optional[str] = None
     hero_image: Optional[str] = None
@@ -191,5 +191,5 @@ class Flower(BaseModel):
 
     # Footer / copyright (defaults sensible)
     copyright_year: int = 2026
-    copyright_holder: str = "Henri Purnell"
+    copyright_holder: str = "Sown.objects"
     copyright_text: Optional[str] = None
