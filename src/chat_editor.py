@@ -52,11 +52,12 @@ You have FOUR tools:
    visual_summary permanently, call `update_flower` first.
 
 3. `attach_step_image` — use when the user attaches a photo or sketch and
-   wants it placed in a specific step of a specific component. The user's
-   attached images are listed below the manual JSON as numbered references
-   (image #1, image #2, …). Pick the right `component_index` (0-based) and
-   `step_index` (0-based, refers to the paragraph inside that component).
-   You may also write a short `caption`. If the target step is unclear,
+   wants it placed inside a component. The user's attached images are
+   listed below the manual JSON as numbered references (image #1, image
+   #2, …). Pick the right `component_index` (0-based). Pass `step_index`
+   (0-based) when the photo illustrates one specific paragraph; omit
+   `step_index` when the photo illustrates the component as a whole. You
+   may also write a short `caption`. If the target component is unclear,
    ask one quick clarifying question first instead of guessing.
 
 4. `set_hero_image` — use when the user attaches an image and wants it as
@@ -64,8 +65,20 @@ You have FOUR tools:
 
 5. `add_inspo_image` — use when the user attaches a finished-piece photo
    and wants it added to the back-of-manual inspo gallery. Pass the
-   matching `image_id`. Never edit `inspo_images` via `update_flower` for
-   user-uploaded photos — only this tool resolves the image to a real path.
+   matching `image_id`.
+
+6. `set_anatomy_diagram` — use when the user attaches a labeled sketch or
+   reference for the flower-anatomy diagram. Pass the matching `image_id`.
+
+7. `add_assembly_image` — use when the user attaches a photo for the final
+   stem-assembly section. Pass the matching `image_id`; optionally pass
+   `step_index` (0-based) within the assembly paragraphs.
+
+For ANY user-uploaded image (hero, anatomy, components, assembly, inspo)
+you MUST use one of tools 3–7 to place it. Never edit image paths
+(`hero_image`, `anatomy_diagram.path`, `components[*].images`,
+`assembly.images`, `inspo_images`) via `update_flower` — only the
+dedicated tools above can resolve uploads to real file paths.
 
 If the user just asks a question, answer in chat without calling any tool.
 If something is ambiguous, ask a brief clarifying question instead of
@@ -167,7 +180,9 @@ def _attach_image_tool_schema() -> dict:
                     "type": "integer",
                     "description": (
                         "0-based index of the paragraph inside the "
-                        "component this image illustrates."
+                        "component this image illustrates. Omit if the "
+                        "image illustrates the component as a whole rather "
+                        "than one specific step."
                     ),
                 },
                 "caption": {
@@ -175,7 +190,7 @@ def _attach_image_tool_schema() -> dict:
                     "description": "Optional one-line caption.",
                 },
             },
-            "required": ["image_id", "component_index", "step_index"],
+            "required": ["image_id", "component_index"],
         },
     }
 
@@ -220,6 +235,67 @@ def _add_inspo_tool_schema() -> dict:
                     "type": "integer",
                     "description": (
                         "1-based id of the user-uploaded image to add."
+                    ),
+                },
+                "caption": {
+                    "type": "string",
+                    "description": "Optional one-line caption.",
+                },
+            },
+            "required": ["image_id"],
+        },
+    }
+
+
+def _set_anatomy_tool_schema() -> dict:
+    return {
+        "name": "set_anatomy_diagram",
+        "description": (
+            "Set one of the user-uploaded images as the anatomy diagram "
+            "(flower.anatomy_diagram). Use when the user uploads a labeled "
+            "sketch or reference showing the flower's parts. Do NOT edit "
+            "anatomy_diagram via update_flower — only this tool resolves "
+            "the upload to a real file path."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "image_id": {
+                    "type": "integer",
+                    "description": "1-based id of the user-uploaded image.",
+                },
+                "caption": {
+                    "type": "string",
+                    "description": "Optional one-line caption.",
+                },
+            },
+            "required": ["image_id"],
+        },
+    }
+
+
+def _add_assembly_tool_schema() -> dict:
+    return {
+        "name": "add_assembly_image",
+        "description": (
+            "Append one of the user-uploaded images to the assembly section "
+            "(flower.assembly.images). Use for photos illustrating final "
+            "stem assembly steps. Do NOT edit assembly.images via "
+            "update_flower — only this tool resolves the upload to a real "
+            "file path."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "image_id": {
+                    "type": "integer",
+                    "description": "1-based id of the user-uploaded image.",
+                },
+                "step_index": {
+                    "type": "integer",
+                    "description": (
+                        "Optional 0-based paragraph index within the "
+                        "assembly section this image illustrates."
                     ),
                 },
                 "caption": {
@@ -282,7 +358,8 @@ def chat(
         attach_block = (
             "\n\n=== ATTACHED IMAGES (this turn) ===\n"
             + "\n".join(lines)
-            + "\n\nUse `attach_step_image`, `set_hero_image`, or `add_inspo_image` to place "
+            + "\n\nUse `attach_step_image`, `set_hero_image`, `add_inspo_image`, "
+            "`set_anatomy_diagram`, or `add_assembly_image` to place "
             "these. The image_id refers to the numbered list above."
         )
 
@@ -319,6 +396,8 @@ def chat(
             _attach_image_tool_schema(),
             _hero_tool_schema(),
             _add_inspo_tool_schema(),
+            _set_anatomy_tool_schema(),
+            _add_assembly_tool_schema(),
         ],
         messages=api_messages,
     )
@@ -354,11 +433,12 @@ def chat(
                 )
         elif block.type == "tool_use" and block.name == "attach_step_image":
             try:
+                raw_step = block.input.get("step_index")
                 image_actions.append({
                     "action": "attach_step",
                     "image_id": int(block.input.get("image_id")),
                     "component_index": int(block.input.get("component_index")),
-                    "step_index": int(block.input.get("step_index")),
+                    "step_index": int(raw_step) if raw_step is not None else None,
                     "caption": (block.input.get("caption") or "").strip() or None,
                 })
             except Exception as e:  # noqa: BLE001
@@ -385,6 +465,30 @@ def chat(
             except Exception as e:  # noqa: BLE001
                 reply_text_parts.append(
                     f"\n\n_(add_inspo_image rejected: {e})_"
+                )
+        elif block.type == "tool_use" and block.name == "set_anatomy_diagram":
+            try:
+                image_actions.append({
+                    "action": "set_anatomy",
+                    "image_id": int(block.input.get("image_id")),
+                    "caption": (block.input.get("caption") or "").strip() or None,
+                })
+            except Exception as e:  # noqa: BLE001
+                reply_text_parts.append(
+                    f"\n\n_(set_anatomy_diagram rejected: {e})_"
+                )
+        elif block.type == "tool_use" and block.name == "add_assembly_image":
+            try:
+                raw_step = block.input.get("step_index")
+                image_actions.append({
+                    "action": "add_assembly",
+                    "image_id": int(block.input.get("image_id")),
+                    "step_index": int(raw_step) if raw_step is not None else None,
+                    "caption": (block.input.get("caption") or "").strip() or None,
+                })
+            except Exception as e:  # noqa: BLE001
+                reply_text_parts.append(
+                    f"\n\n_(add_assembly_image rejected: {e})_"
                 )
 
     reply_text = "\n".join(p for p in reply_text_parts if p).strip()

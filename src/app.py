@@ -796,6 +796,20 @@ with _left_container:
                         path=Path(src_path).as_uri(),
                         caption=action.get("caption"),
                     ))
+                elif action["action"] == "set_anatomy":
+                    flower.anatomy_diagram = ComponentImage(
+                        path=Path(src_path).as_uri(),
+                        caption=action.get("caption"),
+                    )
+                elif action["action"] == "add_assembly":
+                    if flower.assembly is None:
+                        from src.models import AssemblySection
+                        flower.assembly = AssemblySection()
+                    flower.assembly.images.append(ComponentImage(
+                        path=Path(src_path).as_uri(),
+                        step_index=action.get("step_index"),
+                        caption=action.get("caption"),
+                    ))
                 elif action["action"] == "attach_step":
                     c_idx = action["component_index"]
                     s_idx = action["step_index"]
