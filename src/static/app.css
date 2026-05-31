@@ -252,52 +252,55 @@ details[data-testid="stExpander"] > summary {
 /* Radio buttons & checkboxes — sage instead of Streamlit default red.
    BaseWeb sets the selected fill via inline styles based on primaryColor,
    so we override every visual variant of the radio/checkbox indicator. */
-[data-testid="stRadio"] label,
-[data-baseweb="radio"] {
-  --base-radio-color: var(--sage) !important;
-}
-[data-baseweb="radio"] > div:first-child,
-[data-testid="stRadio"] label > div:first-child {
-  border-color: var(--sage-light) !important;
+
+/* --- Radios -------------------------------------------------------- */
+/* Unselected outer circle: cream with sage-light ring */
+[data-baseweb="radio"] > div,
+[data-testid="stRadio"] label > div {
   background: var(--cream) !important;
+  border-color: var(--sage-light) !important;
 }
-/* Selected state — BaseWeb marks the wrapper aria-checked or data-checked */
-[data-baseweb="radio"] [aria-checked="true"],
-[data-baseweb="radio"] [data-checked="true"],
-[data-baseweb="radio"]:has(input:checked) > div:first-child,
-[data-testid="stRadio"] label:has(input:checked) > div:first-child {
+/* Inner dot of an unselected radio is transparent */
+[data-baseweb="radio"] > div > div,
+[data-testid="stRadio"] label > div > div {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+/* Selected state — outer becomes sage, inner becomes cream dot */
+[data-baseweb="radio"][aria-checked="true"] > div,
+[data-baseweb="radio"]:has(input:checked) > div,
+[data-testid="stRadio"] label:has(input:checked) > div {
   background: var(--sage) !important;
   border-color: var(--sage) !important;
 }
-/* Inner dot of the selected radio */
-[data-baseweb="radio"] [aria-checked="true"] > div,
-[data-baseweb="radio"] [data-checked="true"] > div,
-[data-baseweb="radio"]:has(input:checked) > div:first-child > div,
-[data-testid="stRadio"] label:has(input:checked) > div:first-child > div {
+[data-baseweb="radio"][aria-checked="true"] > div > div,
+[data-baseweb="radio"]:has(input:checked) > div > div,
+[data-testid="stRadio"] label:has(input:checked) > div > div {
   background: var(--cream) !important;
   border-color: var(--cream) !important;
 }
-/* Brute-force: any descendant of a radio that is currently using the
-   Streamlit default red gets re-tinted sage. */
+/* Brute-force: any descendant of a radio currently inline-styled with
+   Streamlit's default red gets re-tinted sage. */
 [data-baseweb="radio"] [style*="rgb(255, 75, 75)"],
 [data-baseweb="radio"] [style*="#FF4B4B"],
 [data-baseweb="radio"] [style*="#ff4b4b"] {
   background: var(--sage) !important;
   border-color: var(--sage) !important;
-  color: var(--cream) !important;
 }
 
-[data-testid="stCheckbox"] label > div:first-child,
-[data-baseweb="checkbox"] > span:first-child,
-[data-baseweb="checkbox"] > div:first-child,
-.stCheckbox label > div:first-child {
-  border-color: var(--sage-light) !important;
+/* --- Checkboxes & toggles ----------------------------------------- */
+/* Unselected box: cream with sage-light ring */
+[data-baseweb="checkbox"] > span,
+[data-baseweb="checkbox"] > div,
+[data-testid="stCheckbox"] label > div:first-child {
   background: var(--cream) !important;
+  border-color: var(--sage-light) !important;
 }
-[data-baseweb="checkbox"][aria-checked="true"] > span:first-child,
-[data-baseweb="checkbox"][aria-checked="true"] > div:first-child,
-[data-baseweb="checkbox"]:has(input:checked) > span:first-child,
-[data-baseweb="checkbox"]:has(input:checked) > div:first-child,
+/* Selected state — sage fill */
+[data-baseweb="checkbox"][aria-checked="true"] > span,
+[data-baseweb="checkbox"][aria-checked="true"] > div,
+[data-baseweb="checkbox"]:has(input:checked) > span,
+[data-baseweb="checkbox"]:has(input:checked) > div,
 [data-testid="stCheckbox"] label:has(input:checked) > div:first-child {
   background: var(--sage) !important;
   border-color: var(--sage) !important;
@@ -313,12 +316,12 @@ details[data-testid="stExpander"] > summary {
   border-color: var(--sage) !important;
 }
 
-/* Toggle switches (st.toggle) — same sage palette */
-[data-baseweb="checkbox"][role="switch"] > div:first-child {
+/* Toggle (st.toggle) — track palette */
+[data-baseweb="checkbox"][role="switch"] > div {
   background: var(--cream-dark) !important;
 }
-[data-baseweb="checkbox"][role="switch"][aria-checked="true"] > div:first-child,
-[data-baseweb="checkbox"][role="switch"]:has(input:checked) > div:first-child {
+[data-baseweb="checkbox"][role="switch"][aria-checked="true"] > div,
+[data-baseweb="checkbox"][role="switch"]:has(input:checked) > div {
   background: var(--sage) !important;
 }
 
