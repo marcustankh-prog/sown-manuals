@@ -434,7 +434,18 @@ with _left_container:
                     st.session_state.flower = draft
                     library.save(draft)
                 except Exception as e:  # noqa: BLE001
+                    import traceback
                     st.error(f"AI text draft failed: {e}")
+                    with st.expander("Error details", expanded=False):
+                        st.code(traceback.format_exc(), language="text")
+                    st.stop()
+                if not draft.components:
+                    st.error(
+                        "The AI returned an empty manual (no components). "
+                        "This usually means the response wasn't valid JSON "
+                        "or the photo couldn't be interpreted. Try a "
+                        "clearer photo or a different one."
+                    )
                     st.stop()
 
             if IMAGES_ENABLED and has_openai:
