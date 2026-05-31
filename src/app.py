@@ -10,6 +10,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -104,10 +105,16 @@ _IMAGE_PRESETS = {
 }
 
 
-def _clean_to(target: str, src_path: Path, dest: Path) -> Path:
-    """Run clean_image with the target's preset; fall back to a raw copy."""
+def _clean_to(target: str, src_path: Path, dest: Path,
+              *, bg: Optional[str] = None) -> Path:
+    """Run clean_image with the target's preset; fall back to a raw copy.
+
+    `bg` (optional) overrides the preset's bg setting ("remove" or "keep").
+    """
     from src import image_processing
-    preset = _IMAGE_PRESETS.get(target, {"mode": "auto", "bg": "remove"})
+    preset = dict(_IMAGE_PRESETS.get(target, {"mode": "auto", "bg": "remove"}))
+    if bg in ("remove", "keep"):
+        preset["bg"] = bg
     try:
         image_processing.clean_image(src_path, dest, **preset)
     except Exception as e:  # noqa: BLE001
@@ -712,8 +719,11 @@ with _left_container:
             "<div style='font-family:Jost,sans-serif;font-size:0.86rem;"
             "color:#2E2A22;line-height:1.45;margin:0 0 0.6rem 0;'>"
             "Upload photos for the cover, anatomy diagram, final-assembly "
-            "section, and back-of-manual inspo gallery. Files are saved as-is "
-            "(no background removal)."
+            "section, and back-of-manual inspo gallery. Choose whether to "
+            "remove the background (tighter crop on the subject) or keep it "
+            "(preserves the original framing). For the cover, anatomy, and "
+            "inspo sections you can also ask gpt-image-1 to generate a "
+            "stylised version using your upload as the reference."
             "</div>",
             unsafe_allow_html=True,
         )
@@ -723,8 +733,66 @@ with _left_container:
         _misc_dir = UPLOADS / "manual" / _slug_misc
         from src.models import AssemblySection
 
+        def _bg_select(key: str, default: str = "remove") -> str:
+            return st.selectbox(
+                "Background",
+                options=["remove", "keep"],
+                format_func=lambda v: {"remove": "Remove", "keep": "Keep"}[v],
+                index=0 if default == "remove" else 1,
+                key=key,
+                help=(
+                    "Remove cuts the subject out and tightens the crop. "
+                    "Keep preserves the original framing and background."
+                ),
+            )
+
+        def _ai_generate_button(target: str, label_key: str, raw_path: Path) -> None:
+            """Render an AI-generate button if openai is available + raw exists."""
+            if not has_openai or not raw_path.exists():
+                return
+            if st.button(
+                "✨ Generate variation with gpt-image-1",
+                key=f"{label_key}_ai",
+                use_container_width=True,
+                help=(
+                    "Uses your uploaded photo as a visual reference and "
+                    "generates a styled version (beaded-replica look for "
+                    "cover/inspo, hand-drawn sketch for anatomy)."
+                ),
+            ):
+                from src import image_generator as _ig
+                with st.spinner("Generating…"):
+                    try:
+                        out_path = _ig.generate_from_reference(
+                            flower, target, [raw_path], out_dir=_misc_dir,
+                        )
+                    except Exception as e:  # noqa: BLE001
+                        st.error(f"Generation failed: {e}")
+                        return
+                # Run the generated image through the same cleanup pipeline.
+                # gpt-image-1 already produces a clean studio framing, so we
+                # keep its background and only enhance + square-pad.
+                cleaned = _misc_dir / f"{target}_ai_clean.png"
+                _clean_to(target, out_path, cleaned, bg="keep")
+                if target == "hero":
+                    flower.hero_image = cleaned.as_uri()
+                elif target == "anatomy":
+                    flower.anatomy_diagram = ComponentImage(
+                        path=cleaned.as_uri(),
+                        caption=(flower.anatomy_diagram.caption
+                                 if flower.anatomy_diagram else None),
+                    )
+                elif target == "inspo":
+                    flower.inspo_images.append(ComponentImage(
+                        path=cleaned.as_uri(),
+                    ))
+                library.save(flower)
+                st.rerun()
+
         # --- Cover / hero ---
         st.markdown("**Cover photo**")
+        hero_raw_glob = sorted(_misc_dir.glob("hero_raw.*"))
+        hero_raw = hero_raw_glob[0] if hero_raw_glob else None
         hr1, hr2 = st.columns([0.22, 0.78])
         with hr1:
             if flower.hero_image:
@@ -745,22 +813,30 @@ with _left_container:
                 key="hero_up",
                 label_visibility="collapsed",
             )
+            hero_bg = _bg_select("hero_bg", default="remove")
             if up_hero is not None and st.button(
                 "Set as cover", key="hero_btn", use_container_width=True
             ):
                 _misc_dir.mkdir(parents=True, exist_ok=True)
+                # Clean any prior raw to avoid collisions across formats.
+                for old in _misc_dir.glob("hero_raw.*"):
+                    old.unlink(missing_ok=True)
                 raw = _misc_dir / f"hero_raw{Path(up_hero.name).suffix.lower()}"
                 raw.write_bytes(up_hero.getbuffer())
                 out = _misc_dir / "hero.png"
                 with st.spinner("Cleaning…"):
-                    _clean_to("hero", raw, out)
+                    _clean_to("hero", raw, out, bg=hero_bg)
                 flower.hero_image = out.as_uri()
                 library.save(flower)
                 st.rerun()
+            if hero_raw:
+                _ai_generate_button("hero", "hero", hero_raw)
         st.divider()
 
         # --- Anatomy diagram ---
         st.markdown("**Anatomy diagram**")
+        anatomy_raw_glob = sorted(_misc_dir.glob("anatomy_raw.*"))
+        anatomy_raw = anatomy_raw_glob[0] if anatomy_raw_glob else None
         ar1, ar2 = st.columns([0.22, 0.78])
         with ar1:
             if flower.anatomy_diagram and flower.anatomy_diagram.path:
@@ -781,6 +857,7 @@ with _left_container:
                 key="anatomy_up",
                 label_visibility="collapsed",
             )
+            anatomy_bg = _bg_select("anatomy_bg", default="remove")
             anatomy_caption = st.text_input(
                 "Caption (optional)", key="anatomy_caption",
                 value=(flower.anatomy_diagram.caption or "")
@@ -791,17 +868,21 @@ with _left_container:
                 use_container_width=True,
             ):
                 _misc_dir.mkdir(parents=True, exist_ok=True)
+                for old in _misc_dir.glob("anatomy_raw.*"):
+                    old.unlink(missing_ok=True)
                 raw = _misc_dir / f"anatomy_raw{Path(up_anatomy.name).suffix.lower()}"
                 raw.write_bytes(up_anatomy.getbuffer())
                 out = _misc_dir / "anatomy.png"
                 with st.spinner("Cleaning…"):
-                    _clean_to("anatomy", raw, out)
+                    _clean_to("anatomy", raw, out, bg=anatomy_bg)
                 flower.anatomy_diagram = ComponentImage(
                     path=out.as_uri(),
                     caption=anatomy_caption.strip() or None,
                 )
                 library.save(flower)
                 st.rerun()
+            if anatomy_raw:
+                _ai_generate_button("anatomy", "anatomy", anatomy_raw)
         st.divider()
 
         # --- Assembly images ---
@@ -826,6 +907,7 @@ with _left_container:
             type=["jpg", "jpeg", "png", "webp"],
             key="asm_up",
         )
+        asm_bg = _bg_select("asm_bg", default="remove")
         asm_caption = st.text_input("Caption (optional)", key="asm_caption")
         if up_asm is not None and st.button(
             "Add to assembly", key="asm_btn", use_container_width=True
@@ -838,7 +920,7 @@ with _left_container:
             raw.write_bytes(up_asm.getbuffer())
             out = _misc_dir / f"assembly_{existing}.png"
             with st.spinner("Cleaning…"):
-                _clean_to("assembly", raw, out)
+                _clean_to("assembly", raw, out, bg=asm_bg)
             if flower.assembly is None:
                 flower.assembly = AssemblySection()
             flower.assembly.images.append(ComponentImage(
@@ -871,7 +953,14 @@ with _left_container:
             type=["jpg", "jpeg", "png", "webp"],
             key="inspo_up",
         )
+        inspo_bg = _bg_select("inspo_bg", default="remove")
         inspo_caption = st.text_input("Caption (optional)", key="inspo_caption")
+        # Use the most recent inspo raw (if any) for the AI generator.
+        inspo_raw_glob = sorted(
+            _misc_dir.glob("inspo_*_raw.*"),
+            key=lambda p: p.stat().st_mtime,
+        )
+        inspo_raw = inspo_raw_glob[-1] if inspo_raw_glob else None
         if up_inspo is not None and st.button(
             "Add to inspo gallery", key="inspo_btn", use_container_width=True
         ):
@@ -883,13 +972,15 @@ with _left_container:
             raw.write_bytes(up_inspo.getbuffer())
             out = _misc_dir / f"inspo_{existing}.png"
             with st.spinner("Cleaning…"):
-                _clean_to("inspo", raw, out)
+                _clean_to("inspo", raw, out, bg=inspo_bg)
             flower.inspo_images.append(ComponentImage(
                 path=out.as_uri(),
                 caption=inspo_caption.strip() or None,
             ))
             library.save(flower)
             st.rerun()
+        if inspo_raw:
+            _ai_generate_button("inspo", "inspo", inspo_raw)
 
     # ---- Chat ------------------------------------------------------------
     st.markdown('<div class="sown-chat-label">Conversation</div>', unsafe_allow_html=True)

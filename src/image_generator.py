@@ -92,6 +92,97 @@ def _save(image_bytes: bytes, out_dir: Path, basename: str) -> Path:
     return path
 
 
+def _generate_from_reference(
+    reference_paths: list[Path],
+    prompt: str,
+    *,
+    model: str = "gpt-image-1",
+    size: str = "1024x1024",
+) -> bytes:
+    """Generate an image conditioned on one or more reference photos.
+
+    Uses OpenAI's image-edit endpoint so gpt-image-1 can use the original
+    upload as a visual anchor (subject silhouette, palette, framing).
+    """
+    files = [open(p, "rb") for p in reference_paths]
+    try:
+        resp = _client().images.edit(
+            model=model,
+            image=files if len(files) > 1 else files[0],
+            prompt=prompt,
+            n=1,
+            size=size,
+        )
+    finally:
+        for f in files:
+            try:
+                f.close()
+            except Exception:  # noqa: BLE001
+                pass
+    b64 = resp.data[0].b64_json
+    if b64:
+        return base64.b64decode(b64)
+    url = resp.data[0].url
+    import urllib.request
+    with urllib.request.urlopen(url) as r:  # noqa: S310
+        return r.read()
+
+
+def _hero_prompt(flower: Flower, brief: str = "") -> str:
+    palette = ", ".join(flower.palette[:4]) if flower.palette else "natural muted"
+    brief_block = (
+        f"The beaded replica's silhouette and petal arrangement must match "
+        f"this visual reference: {brief} "
+        if brief
+        else ""
+    )
+    return (
+        f"Editorial cover photograph of a FINISHED BEADED REPLICA of a "
+        f"{flower.name.lower()} flower — hand-crafted from many tiny glass "
+        f"seed beads on thin wire (NOT a real living plant, NOT a silk "
+        f"flower). {brief_block}"
+        f"The flower is the clear hero of the frame on a soft cream paper "
+        f"background with gentle natural light, plenty of negative space "
+        f"around it for cover typography. You can clearly see the individual "
+        f"seed-bead texture. Color palette: {palette}. {PHOTO_STYLE}"
+    )
+
+
+def generate_from_reference(
+    flower: Flower,
+    target: str,
+    reference_paths: list[Path],
+    *,
+    out_dir: Path,
+    model: str = "gpt-image-1",
+    size: str = "1024x1024",
+    brief_override: Optional[str] = None,
+) -> Path:
+    """Generate an image for `target` (hero/anatomy/inspo) from references.
+
+    Returns the saved PNG path. Caller is responsible for attaching it to
+    the flower model.
+    """
+    brief = _visual_brief(flower, override=brief_override)
+    if target == "hero":
+        prompt = _hero_prompt(flower, brief=brief)
+        basename = "hero_ai"
+    elif target == "anatomy":
+        prompt = _anatomy_diagram_prompt(flower, brief=brief)
+        basename = "anatomy_ai"
+    elif target == "inspo":
+        idx = len(flower.inspo_images)
+        prompt = _inspo_prompt(flower, idx=idx, brief=brief)
+        basename = f"inspo_ai_{idx + 1}"
+    else:
+        raise ValueError(f"Unsupported target for reference generation: {target}")
+
+    img_bytes = _generate_from_reference(
+        reference_paths, prompt, model=model, size=size
+    )
+    return _save(img_bytes, out_dir, basename)
+
+
 # ---------------------------------------------------------------------------
 # Prompt builders
 # ---------------------------------------------------------------------------
