@@ -577,7 +577,7 @@ with col_chat:
                             st.caption("_no image_")
                     with r3:
                         upl = st.file_uploader(
-                            "Upload",
+                            "Upload photo or sketch",
                             type=["jpg", "jpeg", "png", "webp"],
                             key=f"{kp}_up",
                             label_visibility="collapsed",
@@ -585,21 +585,32 @@ with col_chat:
                         style = st.selectbox(
                             "Style",
                             options=["auto", "line_art", "photo"],
+                            format_func=lambda v: {
+                                "auto": "Auto-detect",
+                                "line_art": "Line drawing",
+                                "photo": "Photo (keep colour)",
+                            }[v],
                             index=0,
                             key=f"{kp}_style",
-                            label_visibility="collapsed",
                             help=(
-                                "Auto = detect sketch vs photo. "
-                                "Line art = black outlines on white. "
-                                "Photo = keep colour."
+                                "How to render the image. "
+                                "Auto picks line drawing for sketches and photo for photographs. "
+                                "Line drawing converts to black outlines on white."
                             ),
                         )
                         bg = st.selectbox(
                             "Background",
                             options=["remove", "keep"],
+                            format_func=lambda v: {
+                                "remove": "Remove background",
+                                "keep": "Keep background",
+                            }[v],
                             index=0,
                             key=f"{kp}_bg",
-                            label_visibility="collapsed",
+                            help=(
+                                "Remove cuts out the subject (best for clean step diagrams). "
+                                "Keep leaves the original background untouched."
+                            ),
                         )
                         if upl is not None and st.button(
                             "Clean & attach", key=f"{kp}_btn",
