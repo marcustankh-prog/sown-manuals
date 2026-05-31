@@ -784,10 +784,7 @@ with _left_container:
             disabled = raw_path is None or not raw_path.exists()
             help_text = (
                 "Upload a reference photo above first."
-                if disabled else
-                "Uses your uploaded photo as a visual reference and generates "
-                "a styled version (beaded-replica look for cover/inspo, "
-                "hand-drawn sketch for anatomy)."
+                if disabled else None
             )
             if st.button(
                 "✨ Generate variation with AI",
