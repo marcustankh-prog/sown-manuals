@@ -123,16 +123,6 @@ bar_l, bar_r = st.columns([0.85, 0.15])
 with bar_l:
     st.markdown(
         '<div class="sown-header">'
-        '<svg class="sown-mark" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">'
-        '<circle cx="28" cy="28" r="20" stroke="#C4CABD" stroke-width="0.8" fill="none"/>'
-        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55"/>'
-        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(60 28 28)"/>'
-        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(120 28 28)"/>'
-        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(180 28 28)"/>'
-        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(240 28 28)"/>'
-        '<ellipse cx="28" cy="18" rx="5" ry="9" fill="#8A9180" opacity="0.55" transform="rotate(300 28 28)"/>'
-        '<circle cx="28" cy="28" r="3.5" fill="#5C6652"/>'
-        '</svg>'
         '<div class="sown-text">'
         '<h1 class="sown-wordmark">SOWN</h1>'
         '<div class="sown-tagline">Beaded Flowers &amp; Botanical Artistry</div>'

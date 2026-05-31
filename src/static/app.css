@@ -44,15 +44,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContaine
   padding: 1.5rem 0 0.5rem 0;
   border-bottom: 1px solid var(--cream-dark);
   margin-bottom: 1.5rem;
-  display: flex;
-  align-items: flex-end;
-  gap: 1.25rem;
-}
-.sown-mark {
-  flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  opacity: 0.95;
 }
 .sown-text { flex: 1; }
 .sown-wordmark {
@@ -256,6 +247,48 @@ details[data-testid="stExpander"] > summary {
 .stSlider [data-baseweb="slider"] div[role="slider"] {
   background: var(--sage) !important;
   border-color: var(--sage-dark) !important;
+}
+
+/* Radio buttons & checkboxes — sage instead of Streamlit default red.
+   Selectors cover both the BaseWeb internals and the current
+   data-testid markup (stRadio, stCheckbox). */
+[data-testid="stRadio"] label > div:first-child,
+[data-baseweb="radio"] > div:first-child,
+.stRadio div[role="radiogroup"] label > div:first-child {
+  border-color: var(--sage-light) !important;
+}
+[data-testid="stRadio"] input:checked + div,
+[data-baseweb="radio"] input:checked + div,
+.stRadio input:checked + div {
+  border-color: var(--sage) !important;
+  background: var(--sage) !important;
+}
+/* The inner dot of a checked radio */
+[data-testid="stRadio"] input:checked + div > div,
+[data-baseweb="radio"] input:checked + div > div {
+  background: var(--cream) !important;
+}
+
+[data-testid="stCheckbox"] label > div:first-child,
+[data-baseweb="checkbox"] > span:first-child,
+.stCheckbox label > div:first-child {
+  border-color: var(--sage-light) !important;
+  background: var(--cream) !important;
+}
+[data-testid="stCheckbox"] input:checked ~ div:first-of-type,
+[data-baseweb="checkbox"] input:checked ~ span:first-of-type,
+.stCheckbox input:checked ~ div:first-of-type {
+  background: var(--sage) !important;
+  border-color: var(--sage) !important;
+}
+[data-testid="stCheckbox"] svg, [data-baseweb="checkbox"] svg { color: var(--cream) !important; fill: var(--cream) !important; }
+
+/* Toggle switches (st.toggle) — same sage palette */
+[data-baseweb="checkbox"][role="switch"] > div:first-child {
+  background: var(--cream-dark) !important;
+}
+[data-baseweb="checkbox"][role="switch"] input:checked + div {
+  background: var(--sage) !important;
 }
 
 /* Progress bar */
