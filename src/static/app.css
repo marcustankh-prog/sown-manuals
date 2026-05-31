@@ -552,33 +552,45 @@ details[data-testid="stExpander"] > summary {
   border-color: var(--sage) !important;
 }
 
-/* --- Checkboxes & toggles ----------------------------------------- */
-/* Unselected box: cream with sage-light ring (only the first child) */
-[data-baseweb="checkbox"] > span:first-of-type,
-[data-baseweb="checkbox"] > div:first-of-type,
-[data-testid="stCheckbox"] label > div:first-of-type {
-  background: var(--cream) !important;
-  border-color: var(--sage-light) !important;
+/* --- Checkboxes & toggles -----------------------------------------
+   Scope tightly to the visual indicator (the element that contains the
+   <svg> tick). The label root and the text wrapper must NEVER receive
+   a background, otherwise the whole row gets tinted. */
+
+/* Reset: never tint the label root or the text portion. */
+[data-baseweb="checkbox"],
+[data-testid="stCheckbox"] label,
+[data-testid="stCheckbox"] label > div,
+[data-testid="stCheckbox"] label > span {
+  background: transparent !important;
 }
-/* Selected state — sage-dark filled box with a clearly visible cream check */
-[data-baseweb="checkbox"][aria-checked="true"] > span:first-of-type,
-[data-baseweb="checkbox"][aria-checked="true"] > div:first-of-type,
-[data-baseweb="checkbox"]:has(input:checked) > span:first-of-type,
-[data-baseweb="checkbox"]:has(input:checked) > div:first-of-type,
-[data-testid="stCheckbox"] label:has(input:checked) > div:first-of-type {
-  background: var(--sage-dark) !important;
+
+/* The indicator is the element that directly contains the svg tick.
+   Style it via :has(svg) so we hit only the box, never the text. */
+[data-testid="stCheckbox"] label *:has(> svg) {
+  background: var(--cream) !important;
+  border: 1.5px solid var(--sage-light) !important;
+  border-radius: 3px !important;
+}
+[data-testid="stCheckbox"] label:has(input:checked) *:has(> svg) {
   border-color: var(--sage-dark) !important;
 }
-[data-baseweb="checkbox"]:has(input:checked) svg,
-[data-testid="stCheckbox"] label:has(input:checked) svg {
-  color: var(--cream) !important;
-  fill: var(--cream) !important;
-  stroke: var(--cream) !important;
-  opacity: 1 !important;
+
+/* Tick: hidden when unchecked, visible sage-dark when checked. */
+[data-testid="stCheckbox"] label svg {
+  opacity: 0;
 }
-[data-baseweb="checkbox"] [style*="rgb(255, 75, 75)"],
-[data-baseweb="checkbox"] [style*="#FF4B4B"] {
-  background: var(--sage-dark) !important;
+[data-testid="stCheckbox"] label:has(input:checked) svg {
+  opacity: 1 !important;
+  color: var(--sage-dark) !important;
+  fill: var(--sage-dark) !important;
+  stroke: var(--sage-dark) !important;
+}
+
+/* Strip Streamlit's red default fills wherever they appear. */
+[data-testid="stCheckbox"] [style*="rgb(255, 75, 75)"],
+[data-testid="stCheckbox"] [style*="#FF4B4B"] {
+  background: var(--cream) !important;
   border-color: var(--sage-dark) !important;
 }
 
