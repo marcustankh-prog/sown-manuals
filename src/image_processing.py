@@ -26,10 +26,29 @@ from io import BytesIO
 from pathlib import Path
 from typing import Literal, Optional, Tuple
 
-from PIL import Image, ImageOps, ImageFilter, ImageStat
+from PIL import Image, ImageOps, ImageFilter, ImageStat, ImageDraw
 
 Mode = Literal["auto", "line_art", "photo"]
 Bg = Literal["remove", "keep"]
+
+
+def _apply_rounded_corners(img: Image.Image, radius: int) -> Image.Image:
+    """Return an RGBA image with the given corner radius applied to alpha.
+
+    Preserves any existing transparency by intersecting with a rounded mask.
+    """
+    if radius <= 0:
+        return img
+    from PIL import ImageChops
+    if img.mode != "RGBA":
+        img = img.convert("RGBA")
+    mask = Image.new("L", img.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, img.width, img.height), radius=radius, fill=255,
+    )
+    existing_alpha = img.split()[3]
+    img.putalpha(ImageChops.multiply(existing_alpha, mask))
+    return img
 
 
 # ---- Detection ------------------------------------------------------------
@@ -162,8 +181,13 @@ def clean_image(
     bg: Bg = "remove",
     crop_box: Optional[Tuple[int, int, int, int]] = None,
     size: int = 1200,
+    corner_radius: Optional[int] = None,
 ) -> Path:
-    """Clean an image and write it to `dest` as a square PNG."""
+    """Clean an image and write it to `dest` as a square PNG.
+
+    `corner_radius` is the rounded-corner radius in output pixels. When
+    `None` (default), it's set to ~6% of `size`. Pass `0` to disable.
+    """
     src_p = Path(src)
     dest_p = Path(dest)
     dest_p.parent.mkdir(parents=True, exist_ok=True)
@@ -201,5 +225,10 @@ def clean_image(
 
     # Resize to target side
     squared = squared.resize((size, size), Image.LANCZOS)
+
+    # Rounded corners (default ~6% of side).
+    radius = corner_radius if corner_radius is not None else round(size * 0.06)
+    squared = _apply_rounded_corners(squared, radius)
+
     squared.save(dest_p, format="PNG", optimize=True)
     return dest_p

@@ -980,6 +980,8 @@ with _left_container:
             inspo_raw or (
                 _uri_to_path(flower.inspo_images[-1].path)
                 if flower.inspo_images else None
+            ) or _uri_to_path(flower.hero_image) or _uri_to_path(
+                flower.anatomy_diagram.path if flower.anatomy_diagram else None
             ),
         )
 
