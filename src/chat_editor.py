@@ -21,7 +21,7 @@ SYSTEM_PROMPT = """You are an expert French-beading designer helping the user
 refine a single flower pattern manual. The user is looking at a live preview
 of the manual while chatting with you.
 
-You have TWO tools:
+You have FOUR tools:
 
 1. `update_flower` — use whenever the user asks for ANY change to the manual
    text, counts, components, materials, palette, intro, anatomy, or
@@ -51,12 +51,16 @@ You have TWO tools:
    user wants a one-off variation. If you also want to update the saved
    visual_summary permanently, call `update_flower` first.
 
-   Typical flow when an illustration is wrong:
-   a. Ask one quick clarifying question if the user's intent is ambiguous.
-   b. Call `update_flower` to update `visual_summary` (and any other text
-      that was wrong).
-   c. Call `regenerate_images` with the appropriate scope to rebuild.
-   You may call both tools in the SAME turn.
+3. `attach_step_image` — use when the user attaches a photo or sketch and
+   wants it placed in a specific step of a specific component. The user's
+   attached images are listed below the manual JSON as numbered references
+   (image #1, image #2, …). Pick the right `component_index` (0-based) and
+   `step_index` (0-based, refers to the paragraph inside that component).
+   You may also write a short `caption`. If the target step is unclear,
+   ask one quick clarifying question first instead of guessing.
+
+4. `set_hero_image` — use when the user attaches an image and wants it as
+   the cover (hero) image of the manual. Pass the matching `image_id`.
 
 If the user just asks a question, answer in chat without calling any tool.
 If something is ambiguous, ask a brief clarifying question instead of
@@ -130,22 +134,88 @@ def _regen_tool_schema() -> dict:
     }
 
 
+def _attach_image_tool_schema() -> dict:
+    return {
+        "name": "attach_step_image",
+        "description": (
+            "Attach an image the user has uploaded in this turn to a "
+            "specific step of a specific component in the manual."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "image_id": {
+                    "type": "integer",
+                    "description": (
+                        "1-based id of the user-uploaded image to attach "
+                        "(see the 'ATTACHED IMAGES' list)."
+                    ),
+                },
+                "component_index": {
+                    "type": "integer",
+                    "description": (
+                        "0-based index into flower.components for the "
+                        "component this image illustrates."
+                    ),
+                },
+                "step_index": {
+                    "type": "integer",
+                    "description": (
+                        "0-based index of the paragraph inside the "
+                        "component this image illustrates."
+                    ),
+                },
+                "caption": {
+                    "type": "string",
+                    "description": "Optional one-line caption.",
+                },
+            },
+            "required": ["image_id", "component_index", "step_index"],
+        },
+    }
+
+
+def _hero_tool_schema() -> dict:
+    return {
+        "name": "set_hero_image",
+        "description": (
+            "Set one of the user-uploaded images as the cover (hero) "
+            "image of the manual."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "image_id": {
+                    "type": "integer",
+                    "description": (
+                        "1-based id of the user-uploaded image to use "
+                        "as the cover."
+                    ),
+                },
+            },
+            "required": ["image_id"],
+        },
+    }
+
+
 def chat(
     flower: Flower,
     history: List[dict],
     user_message: str,
     *,
+    attached_images: Optional[List[dict]] = None,
     model: Optional[str] = None,
-) -> Tuple[str, Optional[Flower], List[dict], List[dict]]:
+) -> Tuple[str, Optional[Flower], List[dict], List[dict], List[dict]]:
     """Send one chat turn to Claude.
+
+    `attached_images`: optional list of dicts describing images the user
+    uploaded with this turn. Each dict must contain at least `id`
+    (1-based int), `b64` (base64-encoded bytes), and `mime`
+    (e.g. 'image/png').
 
     Returns:
         (assistant_reply_text, updated_flower_or_none, new_history,
-         regen_requests)
-
-        regen_requests is a list of dicts like
-        [{"scope": "inspo", "brief_override": "..."}] for the caller to
-        execute after applying any flower update.
+         regen_requests, image_actions)
     """
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
@@ -168,20 +238,53 @@ def chat(
         )
     else:
         lang_directive = ""
+
+    attach_block = ""
+    if attached_images:
+        lines = [
+            f"  - image #{img['id']} ({img.get('mime', 'image/png')})"
+            for img in attached_images
+        ]
+        attach_block = (
+            "\n\n=== ATTACHED IMAGES (this turn) ===\n"
+            + "\n".join(lines)
+            + "\n\nUse `attach_step_image` or `set_hero_image` to place "
+            "these. The image_id refers to the numbered list above."
+        )
+
     system = (
         SYSTEM_PROMPT
         + lang_directive
         + "\n\n=== CURRENT FLOWER MANUAL (JSON) ===\n"
         + flower_json
+        + attach_block
     )
 
-    api_messages = list(history) + [{"role": "user", "content": user_message}]
+    user_content: list = []
+    if attached_images:
+        for img in attached_images:
+            user_content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": img.get("mime", "image/png"),
+                    "data": img["b64"],
+                },
+            })
+    user_content.append({"type": "text", "text": user_message or "(no text)"})
+
+    api_messages = list(history) + [{"role": "user", "content": user_content}]
 
     resp = client.messages.create(
         model=model,
         max_tokens=8192,
         system=system,
-        tools=[_flower_tool_schema(), _regen_tool_schema()],
+        tools=[
+            _flower_tool_schema(),
+            _regen_tool_schema(),
+            _attach_image_tool_schema(),
+            _hero_tool_schema(),
+        ],
         messages=api_messages,
     )
 
@@ -189,6 +292,7 @@ def chat(
     updated: Optional[Flower] = None
     summary: Optional[str] = None
     regen_requests: list[dict] = []
+    image_actions: list[dict] = []
 
     for block in resp.content:
         if block.type == "text":
@@ -213,6 +317,29 @@ def chat(
                         "reason": block.input.get("reason") or "",
                     }
                 )
+        elif block.type == "tool_use" and block.name == "attach_step_image":
+            try:
+                image_actions.append({
+                    "action": "attach_step",
+                    "image_id": int(block.input.get("image_id")),
+                    "component_index": int(block.input.get("component_index")),
+                    "step_index": int(block.input.get("step_index")),
+                    "caption": (block.input.get("caption") or "").strip() or None,
+                })
+            except Exception as e:  # noqa: BLE001
+                reply_text_parts.append(
+                    f"\n\n_(attach_step_image rejected: {e})_"
+                )
+        elif block.type == "tool_use" and block.name == "set_hero_image":
+            try:
+                image_actions.append({
+                    "action": "set_hero",
+                    "image_id": int(block.input.get("image_id")),
+                })
+            except Exception as e:  # noqa: BLE001
+                reply_text_parts.append(
+                    f"\n\n_(set_hero_image rejected: {e})_"
+                )
 
     reply_text = "\n".join(p for p in reply_text_parts if p).strip()
     if not reply_text:
@@ -224,4 +351,4 @@ def chat(
         reply_text += f"\n\n_Regenerating illustrations: {scopes}…_"
 
     new_history = api_messages + [{"role": "assistant", "content": reply_text}]
-    return reply_text, updated, new_history, regen_requests
+    return reply_text, updated, new_history, regen_requests, image_actions

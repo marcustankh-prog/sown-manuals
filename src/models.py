@@ -98,6 +98,14 @@ class Material(BaseModel):
 class ComponentImage(BaseModel):
     path: str          # local file path or URL
     caption: Optional[str] = None
+    step_index: Optional[int] = Field(
+        None,
+        description=(
+            "Optional 0-based index of the paragraph (step) inside the "
+            "parent component that this image illustrates. None = the "
+            "image belongs to the component as a whole."
+        ),
+    )
 
 
 class Component(BaseModel):

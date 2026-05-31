@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT.parent) not in sys.path:
     sys.path.insert(0, str(ROOT.parent))
 
-from src.models import Flower  # noqa: E402
+from src.models import Flower, ComponentImage  # noqa: E402
 from src import pdf_generator  # noqa: E402
 from src import library  # noqa: E402
 
@@ -503,6 +503,122 @@ with col_chat:
             + (f"\n\n_Classifier note: {_src_reason}_" if _src_reason else "")
         )
 
+    # ---- Step illustrations (manual upload + deterministic cleanup) ------
+    if flower.components:
+        _total_steps = sum(len(c.paragraphs) for c in flower.components)
+        _illustrated = sum(
+            1
+            for c in flower.components
+            for img in c.images
+            if img.step_index is not None
+        )
+        with st.expander(
+            f"📐 Step illustrations ({_illustrated} / {_total_steps})",
+            expanded=False,
+        ):
+            st.caption(
+                "Upload a sketch or photo for each step. The app auto-detects "
+                "whether it's hand-drawn or a photo, removes the background, "
+                "squares the crop and inserts it. *Auto* picks line-art for "
+                "sketches and photo style for photos — override per row if "
+                "you'd rather lock one or the other."
+            )
+            _slug = library.slugify(flower.library_label or flower.name)
+            _steps_dir = UPLOADS / "steps" / _slug
+
+            for c_idx, comp in enumerate(flower.components):
+                st.markdown(f"**{comp.heading.rstrip(':')}**")
+                if not comp.paragraphs:
+                    st.caption("_(no steps yet)_")
+                    continue
+                for s_idx, para in enumerate(comp.paragraphs):
+                    kp = f"stepimg_{c_idx}_{s_idx}"
+                    cur = next(
+                        (img for img in comp.images if img.step_index == s_idx),
+                        None,
+                    )
+                    r1, r2, r3 = st.columns([0.5, 0.18, 0.32])
+                    with r1:
+                        excerpt = para[:170] + ("…" if len(para) > 170 else "")
+                        st.markdown(
+                            f"<span style='color:#7A7B75;font-size:0.78em'>"
+                            f"Step {s_idx + 1}</span><br>"
+                            f"<span style='font-size:0.88em'>{excerpt}</span>",
+                            unsafe_allow_html=True,
+                        )
+                    with r2:
+                        if cur and cur.path:
+                            try:
+                                st.image(cur.path, use_container_width=True)
+                            except Exception:  # noqa: BLE001
+                                st.caption("_(preview n/a)_")
+                            if st.button("Remove", key=f"{kp}_rm",
+                                         use_container_width=True):
+                                comp.images = [
+                                    i for i in comp.images
+                                    if i.step_index != s_idx
+                                ]
+                                library.save(flower)
+                                st.rerun()
+                        else:
+                            st.caption("_no image_")
+                    with r3:
+                        upl = st.file_uploader(
+                            "Upload",
+                            type=["jpg", "jpeg", "png", "webp"],
+                            key=f"{kp}_up",
+                            label_visibility="collapsed",
+                        )
+                        style = st.selectbox(
+                            "Style",
+                            options=["auto", "line_art", "photo"],
+                            index=0,
+                            key=f"{kp}_style",
+                            label_visibility="collapsed",
+                            help=(
+                                "Auto = detect sketch vs photo. "
+                                "Line art = black outlines on white. "
+                                "Photo = keep colour."
+                            ),
+                        )
+                        bg = st.selectbox(
+                            "Background",
+                            options=["remove", "keep"],
+                            index=0,
+                            key=f"{kp}_bg",
+                            label_visibility="collapsed",
+                        )
+                        if upl is not None and st.button(
+                            "Clean & attach", key=f"{kp}_btn",
+                            use_container_width=True,
+                        ):
+                            from src import image_processing
+
+                            _steps_dir.mkdir(parents=True, exist_ok=True)
+                            raw = _steps_dir / (
+                                f"raw_{c_idx}_{s_idx}{Path(upl.name).suffix}"
+                            )
+                            raw.write_bytes(upl.getbuffer())
+                            out = _steps_dir / f"step_{c_idx}_{s_idx}.png"
+                            try:
+                                with st.spinner("Cleaning…"):
+                                    image_processing.clean_image(
+                                        raw, out, mode=style, bg=bg
+                                    )
+                                comp.images = [
+                                    i for i in comp.images
+                                    if i.step_index != s_idx
+                                ]
+                                comp.images.append(ComponentImage(
+                                    path=out.as_uri(),
+                                    step_index=s_idx,
+                                ))
+                                library.save(flower)
+                                st.rerun()
+                            except Exception as e:  # noqa: BLE001
+                                st.error(f"Cleanup failed: {e}")
+                st.markdown("")
+
     # ---- Chat ------------------------------------------------------------
     chat_box = st.container(height=480)
     with chat_box:
@@ -517,20 +633,69 @@ with col_chat:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-    user_msg = st.chat_input(
-        "Ask a question or request a change…",
+    user_input = st.chat_input(
+        "Ask a question, attach a photo, or request a change…",
         disabled=not has_anthropic,
+        accept_file="multiple",
+        file_type=["png", "jpg", "jpeg", "webp"],
     )
-    if user_msg:
-        st.session_state.chat_messages.append({"role": "user", "content": user_msg})
+    if user_input:
+        # `accept_file` makes chat_input return a ChatInputValue, not a str.
+        if isinstance(user_input, str):
+            user_msg = user_input
+            uploaded_files = []
+        else:
+            user_msg = (user_input.text or "").strip()
+            uploaded_files = list(user_input.files or [])
+
+        # Persist + clean any attached images right now so we can pass paths
+        # to chat_editor and reuse them for tool-driven attachments.
+        attached: list[dict] = []
+        if uploaded_files:
+            import base64
+            from src import image_processing
+
+            chat_dir = UPLOADS / "chat" / datetime.now().strftime("%Y%m%d_%H%M%S")
+            chat_dir.mkdir(parents=True, exist_ok=True)
+            for i, uf in enumerate(uploaded_files, start=1):
+                raw = chat_dir / f"raw_{i}{Path(uf.name).suffix}"
+                raw.write_bytes(uf.getbuffer())
+                cleaned = chat_dir / f"img_{i}.png"
+                try:
+                    image_processing.clean_image(
+                        raw, cleaned, mode="auto", bg="remove"
+                    )
+                except Exception:  # noqa: BLE001
+                    cleaned = raw  # fall back to the original
+                b64 = base64.standard_b64encode(cleaned.read_bytes()).decode()
+                attached.append({
+                    "id": i,
+                    "path": cleaned,
+                    "mime": "image/png",
+                    "b64": b64,
+                })
+
+        display_user = user_msg
+        if attached:
+            display_user += (
+                f"\n\n_({len(attached)} image(s) attached)_"
+                if user_msg else f"_(attached {len(attached)} image(s))_"
+            )
+        st.session_state.chat_messages.append(
+            {"role": "user", "content": display_user or "_(image only)_"}
+        )
+
+        regen_requests: list = []
+        image_actions: list = []
         with st.spinner("Claude is thinking…"):
             try:
                 from src import chat_editor
 
-                reply, updated, new_hist, regen_requests = chat_editor.chat(
+                reply, updated, new_hist, regen_requests, image_actions = chat_editor.chat(
                     flower,
                     st.session_state.chat_history,
-                    user_msg,
+                    user_msg or "(image only)",
+                    attached_images=attached or None,
                 )
                 st.session_state.chat_history = new_hist
                 st.session_state.chat_messages.append(
@@ -544,7 +709,44 @@ with col_chat:
                 st.session_state.chat_messages.append(
                     {"role": "assistant", "content": f"⚠️ Error: {e}"}
                 )
-                regen_requests = []
+
+        # Apply image-attachment actions Claude requested.
+        if image_actions and attached:
+            id_to_path = {a["id"]: a["path"] for a in attached}
+            for action in image_actions:
+                img_id = action.get("image_id")
+                src_path = id_to_path.get(img_id)
+                if not src_path or not Path(src_path).exists():
+                    st.session_state.chat_messages.append({
+                        "role": "assistant",
+                        "content": f"⚠️ Could not find attached image #{img_id}.",
+                    })
+                    continue
+                if action["action"] == "set_hero":
+                    flower.hero_image = Path(src_path).as_uri()
+                elif action["action"] == "attach_step":
+                    c_idx = action["component_index"]
+                    s_idx = action["step_index"]
+                    if 0 <= c_idx < len(flower.components):
+                        comp = flower.components[c_idx]
+                        comp.images = [
+                            i for i in comp.images if i.step_index != s_idx
+                        ]
+                        comp.images.append(ComponentImage(
+                            path=Path(src_path).as_uri(),
+                            step_index=s_idx,
+                            caption=action.get("caption"),
+                        ))
+                    else:
+                        st.session_state.chat_messages.append({
+                            "role": "assistant",
+                            "content": (
+                                f"⚠️ component_index {c_idx} out of range "
+                                f"(have {len(flower.components)})."
+                            ),
+                        })
+            st.session_state.flower = flower
+            library.save(flower)
 
         # Run any image-regeneration requests Claude asked for.
         if regen_requests and IMAGES_ENABLED and has_openai:
