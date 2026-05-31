@@ -518,12 +518,16 @@ with col_chat:
             f"📐 Step illustrations ({_illustrated} / {_total_steps})",
             expanded=False,
         ):
-            st.caption(
+            st.markdown(
+                "<div style='font-family:Jost,sans-serif;font-size:0.86rem;"
+                "color:#2E2A22;line-height:1.45;margin:0 0 0.6rem 0;'>"
                 "Upload a sketch or photo for each step. The app auto-detects "
                 "whether it's hand-drawn or a photo, removes the background, "
-                "squares the crop and inserts it. *Auto* picks line-art for "
-                "sketches and photo style for photos — override per row if "
-                "you'd rather lock one or the other."
+                "squares the crop and inserts it. <em>Auto</em> picks line-art "
+                "for sketches and photo style for photos — override per row "
+                "if you'd rather lock one or the other."
+                "</div>",
+                unsafe_allow_html=True,
             )
             _slug = library.slugify(
                 getattr(flower, "library_label", None) or flower.name
