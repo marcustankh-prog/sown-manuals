@@ -560,24 +560,26 @@ details[data-testid="stExpander"] > summary {
   background: var(--cream) !important;
   border-color: var(--sage-light) !important;
 }
-/* Selected state — keep box cream, just show a sage check inside */
+/* Selected state — sage-dark filled box with a clearly visible cream check */
 [data-baseweb="checkbox"][aria-checked="true"] > span:first-of-type,
 [data-baseweb="checkbox"][aria-checked="true"] > div:first-of-type,
 [data-baseweb="checkbox"]:has(input:checked) > span:first-of-type,
 [data-baseweb="checkbox"]:has(input:checked) > div:first-of-type,
 [data-testid="stCheckbox"] label:has(input:checked) > div:first-of-type {
-  background: var(--cream) !important;
-  border-color: var(--sage) !important;
+  background: var(--sage-dark) !important;
+  border-color: var(--sage-dark) !important;
 }
-[data-baseweb="checkbox"] svg,
-[data-testid="stCheckbox"] svg {
-  color: var(--sage-dark) !important;
-  fill: var(--sage-dark) !important;
+[data-baseweb="checkbox"]:has(input:checked) svg,
+[data-testid="stCheckbox"] label:has(input:checked) svg {
+  color: var(--cream) !important;
+  fill: var(--cream) !important;
+  stroke: var(--cream) !important;
+  opacity: 1 !important;
 }
 [data-baseweb="checkbox"] [style*="rgb(255, 75, 75)"],
 [data-baseweb="checkbox"] [style*="#FF4B4B"] {
-  background: var(--cream) !important;
-  border-color: var(--sage) !important;
+  background: var(--sage-dark) !important;
+  border-color: var(--sage-dark) !important;
 }
 
 /* Toggle (st.toggle) — track palette */

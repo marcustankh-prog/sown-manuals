@@ -388,7 +388,7 @@ with _left_container:
         )
         lang_code = "ko" if lang_choice.startswith("\ud55c") else "en"
         recreate_mode = st.checkbox(
-            "\U0001FAA1 This is already a beaded flower \u2014 recreate it exactly",
+            "This is already a beaded flower \u2014 recreate it exactly",
             value=False,
             key="recreate_mode",
         )
