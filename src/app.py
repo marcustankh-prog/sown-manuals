@@ -748,7 +748,6 @@ with _left_container:
             getattr(flower, "library_label", None) or flower.name
         )
         _misc_dir = UPLOADS / "manual" / _slug_misc
-        from src.models import AssemblySection
 
         def _bg_select(key: str, default: str = "remove") -> str:
             return st.selectbox(
@@ -913,54 +912,8 @@ with _left_container:
                 "anatomy", "anatomy",
                 anatomy_raw or _uri_to_path(
                     flower.anatomy_diagram.path if flower.anatomy_diagram else None
-                ),
+                ) or _uri_to_path(flower.hero_image),
             )
-        st.divider()
-
-        # --- Assembly images ---
-        st.markdown("**Assembly section photos**")
-        if flower.assembly and flower.assembly.images:
-            cols_a = st.columns(min(len(flower.assembly.images), 4))
-            for i, img in enumerate(flower.assembly.images):
-                with cols_a[i % len(cols_a)]:
-                    try:
-                        st.image(img.path, use_container_width=True)
-                    except Exception:  # noqa: BLE001
-                        st.caption("_(preview n/a)_")
-                    if st.button("Remove", key=f"asm_rm_{i}",
-                                 use_container_width=True):
-                        flower.assembly.images.pop(i)
-                        library.save(flower)
-                        st.rerun()
-        else:
-            st.caption("_no images yet_")
-        up_asm = st.file_uploader(
-            "Upload assembly photo",
-            type=["jpg", "jpeg", "png", "webp"],
-            key="asm_up",
-        )
-        asm_bg = _bg_select("asm_bg", default="remove")
-        asm_caption = st.text_input("Caption (optional)", key="asm_caption")
-        if up_asm is not None and st.button(
-            "Add to assembly", key="asm_btn", use_container_width=True
-        ):
-            _misc_dir.mkdir(parents=True, exist_ok=True)
-            existing = len(flower.assembly.images) if flower.assembly else 0
-            raw = _misc_dir / (
-                f"assembly_{existing}_raw{Path(up_asm.name).suffix.lower()}"
-            )
-            raw.write_bytes(up_asm.getbuffer())
-            out = _misc_dir / f"assembly_{existing}.png"
-            with st.spinner("Cleaning…"):
-                _clean_to("assembly", raw, out, bg=asm_bg)
-            if flower.assembly is None:
-                flower.assembly = AssemblySection()
-            flower.assembly.images.append(ComponentImage(
-                path=out.as_uri(),
-                caption=asm_caption.strip() or None,
-            ))
-            library.save(flower)
-            st.rerun()
         st.divider()
 
         # --- Inspo gallery ---
