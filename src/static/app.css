@@ -553,30 +553,31 @@ details[data-testid="stExpander"] > summary {
 }
 
 /* --- Checkboxes & toggles -----------------------------------------
-   Scope tightly to the visual indicator (the element that contains the
-   <svg> tick). The label root and the text wrapper must NEVER receive
-   a background, otherwise the whole row gets tinted. */
+   Strategy: use the native `accent-color` property on the actual
+   <input>, and force every wrapper inside the label to be transparent
+   so Streamlit's internal indicator never paints a coloured row. */
 
-/* Reset: never tint the label root or the text portion. */
-[data-baseweb="checkbox"],
-[data-testid="stCheckbox"] label,
-[data-testid="stCheckbox"] label > div,
-[data-testid="stCheckbox"] label > span {
-  background: transparent !important;
+[data-testid="stCheckbox"] input[type="checkbox"] {
+  accent-color: var(--sage-dark);
 }
 
-/* The indicator is the element that directly contains the svg tick.
-   Style it via :has(svg) so we hit only the box, never the text. */
-[data-testid="stCheckbox"] label *:has(> svg) {
+[data-testid="stCheckbox"],
+[data-testid="stCheckbox"] *,
+[data-baseweb="checkbox"],
+[data-baseweb="checkbox"] * {
+  background-color: transparent !important;
+}
+
+/* Re-paint just the small visible box (BaseWeb renders it as a span/div
+   that wraps the svg tick or sits next to the hidden input). */
+[data-testid="stCheckbox"] label span:has(> svg),
+[data-testid="stCheckbox"] label div:has(> svg) {
   background: var(--cream) !important;
-  border: 1.5px solid var(--sage-light) !important;
+  border: 1.5px solid var(--sage) !important;
   border-radius: 3px !important;
 }
-[data-testid="stCheckbox"] label:has(input:checked) *:has(> svg) {
-  border-color: var(--sage-dark) !important;
-}
 
-/* Tick: hidden when unchecked, visible sage-dark when checked. */
+/* Tick visibility & colour. */
 [data-testid="stCheckbox"] label svg {
   opacity: 0;
 }
@@ -587,11 +588,11 @@ details[data-testid="stExpander"] > summary {
   stroke: var(--sage-dark) !important;
 }
 
-/* Strip Streamlit's red default fills wherever they appear. */
+/* Strip Streamlit's red default fills if they slip through. */
 [data-testid="stCheckbox"] [style*="rgb(255, 75, 75)"],
 [data-testid="stCheckbox"] [style*="#FF4B4B"] {
   background: var(--cream) !important;
-  border-color: var(--sage-dark) !important;
+  border-color: var(--sage) !important;
 }
 
 /* Toggle (st.toggle) — track palette */
