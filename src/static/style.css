@@ -72,6 +72,14 @@ a { color: var(--sage-dark); text-decoration: none; border-bottom: 0.4pt solid v
 }
 .page:last-child { page-break-after: auto; }
 
+/* Screen-only padding so the in-app HTML preview doesn't hug the iframe
+   edge. Print uses @page margins instead and ignores this. */
+@media screen {
+  .page {
+    padding: 24pt 28pt;
+  }
+}
+
 .rule {
   border: none;
   border-top: 0.5pt solid var(--rule);

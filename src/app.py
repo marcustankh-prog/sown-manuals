@@ -180,13 +180,7 @@ if not has_anthropic:
 
 IMAGES_ENABLED = os.getenv("IMAGES_ENABLED", "false").lower() in ("1", "true", "yes", "on")
 
-if not IMAGES_ENABLED:
-    st.info(
-        "💸 Illustration generation is currently **disabled** to save API costs while "
-        "we refine the written instructions. The manual will render as text only. "
-        "Set `IMAGES_ENABLED=true` in `.env` or Streamlit secrets to re-enable."
-    )
-elif not has_openai:
+if IMAGES_ENABLED and not has_openai:
     st.warning(
         "Add `OPENAI_API_KEY` to `.env` (or Streamlit secrets) to enable "
         "illustration & inspo-photo generation. Without it, all image "
@@ -209,10 +203,9 @@ if HAS_MANUAL:
     col_chat, col_preview = st.columns([0.42, 0.58], gap="large")
     _left_container = col_chat
 else:
-    # Centre a comfortable-width column for the welcome screen.
-    _w_l, _w_c, _w_r = st.columns([0.15, 0.7, 0.15])
-    _left_container = _w_c
-    with _w_c:
+    # Welcome screen uses the full main column so panels resize fluidly.
+    _left_container = st.container()
+    with _left_container:
         st.markdown(
             "<div style='font-family:Cormorant Garamond,serif;"
             "font-style:italic;color:#5C6652;font-size:1.15rem;"
@@ -679,14 +672,14 @@ with _left_container:
                     st.divider()
 
     # ---- Chat ------------------------------------------------------------
-    chat_box = st.container(height=480)
+    st.markdown('<div class="sown-chat-label">Conversation</div>', unsafe_allow_html=True)
+    chat_box = st.container(height=480, border=True, key="sown_chat_panel")
     with chat_box:
         if not st.session_state.chat_messages:
-            st.info(
-                "Drop a flower photo above and click *Generate*, "
-                "or just start chatting to build a manual from scratch. "
-                "Try: *'make the outer petals 16 instead of 12'* or "
-                "*'rewrite the intro warmer'*."
+            st.markdown(
+                '<div class="sown-chat-empty">Ask a question or request '
+                'a change to begin.</div>',
+                unsafe_allow_html=True,
             )
         for msg in st.session_state.chat_messages:
             with st.chat_message(msg["role"]):
@@ -746,28 +739,43 @@ with _left_container:
 
         regen_requests: list = []
         image_actions: list = []
-        with st.spinner("Claude is thinking…"):
-            try:
-                from src import chat_editor
+        # Render the just-added user turn and a live "thinking" assistant
+        # bubble inside the chat panel so progress stays in-flow.
+        with chat_box:
+            with st.chat_message("user"):
+                st.markdown(display_user or "_(image only)_")
+            with st.chat_message("assistant"):
+                thinking_slot = st.empty()
+                thinking_slot.markdown(
+                    '<div class="sown-thinking">'
+                    '<span class="sown-thinking-dot"></span>'
+                    '<span class="sown-thinking-dot"></span>'
+                    '<span class="sown-thinking-dot"></span>'
+                    '<span class="sown-thinking-text">Sown is thinking…</span>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+        try:
+            from src import chat_editor
 
-                reply, updated, new_hist, regen_requests, image_actions = chat_editor.chat(
-                    flower,
-                    st.session_state.chat_history,
-                    user_msg or "(image only)",
-                    attached_images=attached or None,
-                )
-                st.session_state.chat_history = new_hist
-                st.session_state.chat_messages.append(
-                    {"role": "assistant", "content": reply}
-                )
-                if updated is not None:
-                    st.session_state.flower = updated
-                    flower = updated
-                    library.save(updated)
-            except Exception as e:  # noqa: BLE001
-                st.session_state.chat_messages.append(
-                    {"role": "assistant", "content": f"⚠️ Error: {e}"}
-                )
+            reply, updated, new_hist, regen_requests, image_actions = chat_editor.chat(
+                flower,
+                st.session_state.chat_history,
+                user_msg or "(image only)",
+                attached_images=attached or None,
+            )
+            st.session_state.chat_history = new_hist
+            st.session_state.chat_messages.append(
+                {"role": "assistant", "content": reply}
+            )
+            if updated is not None:
+                st.session_state.flower = updated
+                flower = updated
+                library.save(updated)
+        except Exception as e:  # noqa: BLE001
+            st.session_state.chat_messages.append(
+                {"role": "assistant", "content": f"⚠️ Error: {e}"}
+            )
 
         # Apply image-attachment actions Claude requested.
         if image_actions and attached:
