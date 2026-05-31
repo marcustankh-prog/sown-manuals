@@ -746,19 +746,28 @@ with _left_container:
                 ),
             )
 
-        def _ai_generate_button(target: str, label_key: str, raw_path: Path) -> None:
-            """Render an AI-generate button if openai is available + raw exists."""
-            if not has_openai or not raw_path.exists():
+        def _ai_generate_button(target: str, label_key: str,
+                                raw_path: Optional[Path]) -> None:
+            """Render an AI-generate button. Disabled until a reference exists."""
+            if not has_openai:
+                st.caption(
+                    "_Set OPENAI_API_KEY to enable gpt-image-1 generation._"
+                )
                 return
+            disabled = raw_path is None or not raw_path.exists()
+            help_text = (
+                "Upload a reference photo above first."
+                if disabled else
+                "Uses your uploaded photo as a visual reference and generates "
+                "a styled version (beaded-replica look for cover/inspo, "
+                "hand-drawn sketch for anatomy)."
+            )
             if st.button(
                 "✨ Generate variation with gpt-image-1",
                 key=f"{label_key}_ai",
                 use_container_width=True,
-                help=(
-                    "Uses your uploaded photo as a visual reference and "
-                    "generates a styled version (beaded-replica look for "
-                    "cover/inspo, hand-drawn sketch for anatomy)."
-                ),
+                disabled=disabled,
+                help=help_text,
             ):
                 from src import image_generator as _ig
                 with st.spinner("Generating…"):
@@ -829,8 +838,7 @@ with _left_container:
                 flower.hero_image = out.as_uri()
                 library.save(flower)
                 st.rerun()
-            if hero_raw:
-                _ai_generate_button("hero", "hero", hero_raw)
+            _ai_generate_button("hero", "hero", hero_raw)
         st.divider()
 
         # --- Anatomy diagram ---
@@ -881,8 +889,7 @@ with _left_container:
                 )
                 library.save(flower)
                 st.rerun()
-            if anatomy_raw:
-                _ai_generate_button("anatomy", "anatomy", anatomy_raw)
+            _ai_generate_button("anatomy", "anatomy", anatomy_raw)
         st.divider()
 
         # --- Assembly images ---
@@ -979,8 +986,7 @@ with _left_container:
             ))
             library.save(flower)
             st.rerun()
-        if inspo_raw:
-            _ai_generate_button("inspo", "inspo", inspo_raw)
+        _ai_generate_button("inspo", "inspo", inspo_raw)
 
     # ---- Chat ------------------------------------------------------------
     st.markdown('<div class="sown-chat-label">Conversation</div>', unsafe_allow_html=True)

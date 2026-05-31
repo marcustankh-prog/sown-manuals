@@ -103,22 +103,54 @@ def _generate_from_reference(
 
     Uses OpenAI's image-edit endpoint so gpt-image-1 can use the original
     upload as a visual anchor (subject silhouette, palette, framing).
+    The endpoint only accepts PNG inputs (≤4MB, square preferred), so we
+    re-encode each reference into a 1024×1024 RGBA PNG first.
     """
-    files = [open(p, "rb") for p in reference_paths]
+    from PIL import Image, ImageOps
+    from io import BytesIO
+    import tempfile
+
+    prepared: list[Path] = []
+    tmp_files: list[tempfile._TemporaryFileWrapper] = []
     try:
-        resp = _client().images.edit(
-            model=model,
-            image=files if len(files) > 1 else files[0],
-            prompt=prompt,
-            n=1,
-            size=size,
-        )
+        for p in reference_paths:
+            img = ImageOps.exif_transpose(Image.open(p)).convert("RGBA")
+            # Pad to square on transparent background, then resize.
+            side = max(img.width, img.height)
+            canvas = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+            canvas.paste(img, ((side - img.width) // 2,
+                               (side - img.height) // 2), img)
+            canvas = canvas.resize((1024, 1024), Image.LANCZOS)
+            tmp = tempfile.NamedTemporaryFile(
+                suffix=".png", delete=False
+            )
+            canvas.save(tmp.name, format="PNG", optimize=True)
+            tmp.close()
+            prepared.append(Path(tmp.name))
+            tmp_files.append(tmp)
+
+        files = [open(p, "rb") for p in prepared]
+        try:
+            resp = _client().images.edit(
+                model=model,
+                image=files if len(files) > 1 else files[0],
+                prompt=prompt,
+                n=1,
+                size=size,
+            )
+        finally:
+            for f in files:
+                try:
+                    f.close()
+                except Exception:  # noqa: BLE001
+                    pass
     finally:
-        for f in files:
+        for p in prepared:
             try:
-                f.close()
+                p.unlink(missing_ok=True)
             except Exception:  # noqa: BLE001
                 pass
+
     b64 = resp.data[0].b64_json
     if b64:
         return base64.b64decode(b64)
