@@ -92,6 +92,30 @@ def _img_src(path_or_uri: str) -> str:
     return path_or_uri
 
 
+# Per-target image-processing presets used by both the manual uploaders
+# and the chat upload handler so every uploaded photo is cropped/squared.
+_IMAGE_PRESETS = {
+    "hero":           {"mode": "photo",  "bg": "keep"},
+    "anatomy":        {"mode": "auto",   "bg": "remove"},
+    "assembly":       {"mode": "auto",   "bg": "remove"},
+    "inspo":          {"mode": "photo",  "bg": "keep"},
+    "component_step": {"mode": "auto",   "bg": "remove"},
+}
+
+
+def _clean_to(target: str, src_path: Path, dest: Path) -> Path:
+    """Run clean_image with the target's preset; fall back to a raw copy."""
+    from src import image_processing
+    preset = _IMAGE_PRESETS.get(target, {"mode": "auto", "bg": "remove"})
+    try:
+        image_processing.clean_image(src_path, dest, **preset)
+    except Exception:  # noqa: BLE001
+        # Worst case: keep the original bytes so the user still gets the image.
+        if src_path.resolve() != dest.resolve():
+            dest.write_bytes(src_path.read_bytes())
+    return dest
+
+
 # ---------- UI ---------------------------------------------------------------
 
 st.set_page_config(page_title="SOWN — Beaded Flower Manual", page_icon="🌿", layout="wide")
@@ -714,8 +738,11 @@ with _left_container:
                 "Set as cover", key="hero_btn", use_container_width=True
             ):
                 _misc_dir.mkdir(parents=True, exist_ok=True)
-                out = _misc_dir / f"hero{Path(up_hero.name).suffix.lower()}"
-                out.write_bytes(up_hero.getbuffer())
+                raw = _misc_dir / f"hero_raw{Path(up_hero.name).suffix.lower()}"
+                raw.write_bytes(up_hero.getbuffer())
+                out = _misc_dir / "hero.png"
+                with st.spinner("Cleaning…"):
+                    _clean_to("hero", raw, out)
                 flower.hero_image = out.as_uri()
                 library.save(flower)
                 st.rerun()
@@ -753,8 +780,11 @@ with _left_container:
                 use_container_width=True,
             ):
                 _misc_dir.mkdir(parents=True, exist_ok=True)
-                out = _misc_dir / f"anatomy{Path(up_anatomy.name).suffix.lower()}"
-                out.write_bytes(up_anatomy.getbuffer())
+                raw = _misc_dir / f"anatomy_raw{Path(up_anatomy.name).suffix.lower()}"
+                raw.write_bytes(up_anatomy.getbuffer())
+                out = _misc_dir / "anatomy.png"
+                with st.spinner("Cleaning…"):
+                    _clean_to("anatomy", raw, out)
                 flower.anatomy_diagram = ComponentImage(
                     path=out.as_uri(),
                     caption=anatomy_caption.strip() or None,
@@ -791,10 +821,13 @@ with _left_container:
         ):
             _misc_dir.mkdir(parents=True, exist_ok=True)
             existing = len(flower.assembly.images) if flower.assembly else 0
-            out = _misc_dir / (
-                f"assembly_{existing}{Path(up_asm.name).suffix.lower()}"
+            raw = _misc_dir / (
+                f"assembly_{existing}_raw{Path(up_asm.name).suffix.lower()}"
             )
-            out.write_bytes(up_asm.getbuffer())
+            raw.write_bytes(up_asm.getbuffer())
+            out = _misc_dir / f"assembly_{existing}.png"
+            with st.spinner("Cleaning…"):
+                _clean_to("assembly", raw, out)
             if flower.assembly is None:
                 flower.assembly = AssemblySection()
             flower.assembly.images.append(ComponentImage(
@@ -833,10 +866,13 @@ with _left_container:
         ):
             _misc_dir.mkdir(parents=True, exist_ok=True)
             existing = len(flower.inspo_images)
-            out = _misc_dir / (
-                f"inspo_{existing}{Path(up_inspo.name).suffix.lower()}"
+            raw = _misc_dir / (
+                f"inspo_{existing}_raw{Path(up_inspo.name).suffix.lower()}"
             )
-            out.write_bytes(up_inspo.getbuffer())
+            raw.write_bytes(up_inspo.getbuffer())
+            out = _misc_dir / f"inspo_{existing}.png"
+            with st.spinner("Cleaning…"):
+                _clean_to("inspo", raw, out)
             flower.inspo_images.append(ComponentImage(
                 path=out.as_uri(),
                 caption=inspo_caption.strip() or None,
@@ -951,9 +987,56 @@ with _left_container:
             )
 
         # Apply image-attachment actions Claude requested.
-        if image_actions and attached:
-            id_to_path = {a["id"]: a["path"] for a in attached}
+        if image_actions:
+            id_to_path = {a["id"]: a["path"] for a in (attached or [])}
+            _slug_chat = library.slugify(
+                getattr(flower, "library_label", None) or flower.name
+            )
+            _chat_clean_dir = UPLOADS / "manual" / _slug_chat
+            _chat_clean_dir.mkdir(parents=True, exist_ok=True)
+
+            def _process_chat_image(target: str, src: str, suffix: str = "") -> str:
+                """Run the chat-attached file through clean_image and return file:// URI."""
+                src_p = Path(src)
+                stem = f"{target}{suffix}_{src_p.stem}"
+                out = _chat_clean_dir / f"{stem}.png"
+                _clean_to(target, src_p, out)
+                return out.as_uri()
+
             for action in image_actions:
+                act = action["action"]
+
+                # Removal actions don't reference an attached image.
+                if act == "remove_image":
+                    target = action.get("target")
+                    idx = action.get("index")
+                    c_idx = action.get("component_index")
+                    s_idx = action.get("step_index")
+                    if target == "hero":
+                        flower.hero_image = None
+                    elif target == "anatomy":
+                        flower.anatomy_diagram = None
+                    elif target == "inspo":
+                        if isinstance(idx, int) and 0 <= idx < len(flower.inspo_images):
+                            flower.inspo_images.pop(idx)
+                        else:
+                            flower.inspo_images.clear()
+                    elif target == "assembly" and flower.assembly:
+                        if isinstance(idx, int) and 0 <= idx < len(flower.assembly.images):
+                            flower.assembly.images.pop(idx)
+                        else:
+                            flower.assembly.images.clear()
+                    elif target == "component_step":
+                        if isinstance(c_idx, int) and 0 <= c_idx < len(flower.components):
+                            comp = flower.components[c_idx]
+                            if isinstance(s_idx, int):
+                                comp.images = [
+                                    i for i in comp.images if i.step_index != s_idx
+                                ]
+                            else:
+                                comp.images.clear()
+                    continue
+
                 img_id = action.get("image_id")
                 src_path = id_to_path.get(img_id)
                 if not src_path or not Path(src_path).exists():
@@ -962,28 +1045,30 @@ with _left_container:
                         "content": f"⚠️ Could not find attached image #{img_id}.",
                     })
                     continue
-                if action["action"] == "set_hero":
-                    flower.hero_image = Path(src_path).as_uri()
-                elif action["action"] == "add_inspo":
+                if act == "set_hero":
+                    flower.hero_image = _process_chat_image("hero", src_path)
+                elif act == "add_inspo":
+                    suffix = f"_{len(flower.inspo_images)}"
                     flower.inspo_images.append(ComponentImage(
-                        path=Path(src_path).as_uri(),
+                        path=_process_chat_image("inspo", src_path, suffix),
                         caption=action.get("caption"),
                     ))
-                elif action["action"] == "set_anatomy":
+                elif act == "set_anatomy":
                     flower.anatomy_diagram = ComponentImage(
-                        path=Path(src_path).as_uri(),
+                        path=_process_chat_image("anatomy", src_path),
                         caption=action.get("caption"),
                     )
-                elif action["action"] == "add_assembly":
+                elif act == "add_assembly":
                     if flower.assembly is None:
                         from src.models import AssemblySection
                         flower.assembly = AssemblySection()
+                    suffix = f"_{len(flower.assembly.images)}"
                     flower.assembly.images.append(ComponentImage(
-                        path=Path(src_path).as_uri(),
+                        path=_process_chat_image("assembly", src_path, suffix),
                         step_index=action.get("step_index"),
                         caption=action.get("caption"),
                     ))
-                elif action["action"] == "attach_step":
+                elif act == "attach_step":
                     c_idx = action["component_index"]
                     s_idx = action["step_index"]
                     if 0 <= c_idx < len(flower.components):
@@ -991,8 +1076,9 @@ with _left_container:
                         comp.images = [
                             i for i in comp.images if i.step_index != s_idx
                         ]
+                        suffix = f"_c{c_idx}_s{s_idx if s_idx is not None else 'all'}"
                         comp.images.append(ComponentImage(
-                            path=Path(src_path).as_uri(),
+                            path=_process_chat_image("component_step", src_path, suffix),
                             step_index=s_idx,
                             caption=action.get("caption"),
                         ))

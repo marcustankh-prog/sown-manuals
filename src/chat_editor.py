@@ -74,6 +74,12 @@ You have FOUR tools:
    stem-assembly section. Pass the matching `image_id`; optionally pass
    `step_index` (0-based) within the assembly paragraphs.
 
+8. `remove_image` — use when the user asks to delete a photo. Pass the
+   `target` section (`hero`, `anatomy`, `inspo`, `assembly`, or
+   `component_step`). For `inspo` and `assembly`, pass the 0-based `index`
+   to remove a single photo (omit to clear the section). For
+   `component_step`, pass `component_index` and optionally `step_index`.
+
 For ANY user-uploaded image (hero, anatomy, components, assembly, inspo)
 you MUST use one of tools 3–7 to place it. Never edit image paths
 (`hero_image`, `anatomy_diagram.path`, `components[*].images`,
@@ -308,6 +314,43 @@ def _add_assembly_tool_schema() -> dict:
     }
 
 
+def _remove_image_tool_schema() -> dict:
+    return {
+        "name": "remove_image",
+        "description": (
+            "Delete an image from the manual. Use whenever the user asks "
+            "to remove, delete, or take down a photo. `target` selects the "
+            "section. For list-typed sections (inspo, assembly), pass the "
+            "0-based `index` of the image to remove; omit `index` to clear "
+            "the whole list. For component_step, pass `component_index` "
+            "(required) and `step_index` (optional — omit to clear all "
+            "images on that component)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "enum": ["hero", "anatomy", "inspo", "assembly", "component_step"],
+                },
+                "index": {
+                    "type": "integer",
+                    "description": "0-based index in the target list.",
+                },
+                "component_index": {
+                    "type": "integer",
+                    "description": "0-based component index (component_step only).",
+                },
+                "step_index": {
+                    "type": "integer",
+                    "description": "0-based step index (component_step only).",
+                },
+            },
+            "required": ["target"],
+        },
+    }
+
+
 def chat(
     flower: Flower,
     history: List[dict],
@@ -360,6 +403,7 @@ def chat(
             + "\n".join(lines)
             + "\n\nUse `attach_step_image`, `set_hero_image`, `add_inspo_image`, "
             "`set_anatomy_diagram`, or `add_assembly_image` to place "
+            _remove_image_tool_schema(),
             "these. The image_id refers to the numbered list above."
         )
 
@@ -450,7 +494,23 @@ def chat(
                 image_actions.append({
                     "action": "set_hero",
                     "image_id": int(block.input.get("image_id")),
+                }
+        elif block.type == "tool_use" and block.name == "remove_image":
+            try:
+                raw_idx = block.input.get("index")
+                raw_c = block.input.get("component_index")
+                raw_s = block.input.get("step_index")
+                image_actions.append({
+                    "action": "remove_image",
+                    "target": block.input.get("target"),
+                    "index": int(raw_idx) if raw_idx is not None else None,
+                    "component_index": int(raw_c) if raw_c is not None else None,
+                    "step_index": int(raw_s) if raw_s is not None else None,
                 })
+            except Exception as e:  # noqa: BLE001
+                reply_text_parts.append(
+                    f"\n\n_(remove_image rejected: {e})_"
+                ))
             except Exception as e:  # noqa: BLE001
                 reply_text_parts.append(
                     f"\n\n_(set_hero_image rejected: {e})_"
