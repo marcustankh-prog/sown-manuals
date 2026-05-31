@@ -671,6 +671,179 @@ with _left_container:
                                 st.error(f"Cleanup failed: {e}")
                     st.divider()
 
+    # ---- Other manual image uploads (hero / anatomy / assembly / inspo) --
+    with st.expander("🖼️ Cover, anatomy, assembly & inspo photos", expanded=False):
+        st.markdown(
+            "<div style='font-family:Jost,sans-serif;font-size:0.86rem;"
+            "color:#2E2A22;line-height:1.45;margin:0 0 0.6rem 0;'>"
+            "Upload photos for the cover, anatomy diagram, final-assembly "
+            "section, and back-of-manual inspo gallery. Files are saved as-is "
+            "(no background removal)."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+        _slug_misc = library.slugify(
+            getattr(flower, "library_label", None) or flower.name
+        )
+        _misc_dir = UPLOADS / "manual" / _slug_misc
+        from src.models import AssemblySection
+
+        # --- Cover / hero ---
+        st.markdown("**Cover photo**")
+        hr1, hr2 = st.columns([0.22, 0.78])
+        with hr1:
+            if flower.hero_image:
+                try:
+                    st.image(flower.hero_image, use_container_width=True)
+                except Exception:  # noqa: BLE001
+                    st.caption("_(preview n/a)_")
+                if st.button("Remove", key="hero_rm", use_container_width=True):
+                    flower.hero_image = None
+                    library.save(flower)
+                    st.rerun()
+            else:
+                st.caption("_no image yet_")
+        with hr2:
+            up_hero = st.file_uploader(
+                "Upload cover photo",
+                type=["jpg", "jpeg", "png", "webp"],
+                key="hero_up",
+                label_visibility="collapsed",
+            )
+            if up_hero is not None and st.button(
+                "Set as cover", key="hero_btn", use_container_width=True
+            ):
+                _misc_dir.mkdir(parents=True, exist_ok=True)
+                out = _misc_dir / f"hero{Path(up_hero.name).suffix.lower()}"
+                out.write_bytes(up_hero.getbuffer())
+                flower.hero_image = out.as_uri()
+                library.save(flower)
+                st.rerun()
+        st.divider()
+
+        # --- Anatomy diagram ---
+        st.markdown("**Anatomy diagram**")
+        ar1, ar2 = st.columns([0.22, 0.78])
+        with ar1:
+            if flower.anatomy_diagram and flower.anatomy_diagram.path:
+                try:
+                    st.image(flower.anatomy_diagram.path, use_container_width=True)
+                except Exception:  # noqa: BLE001
+                    st.caption("_(preview n/a)_")
+                if st.button("Remove", key="anatomy_rm", use_container_width=True):
+                    flower.anatomy_diagram = None
+                    library.save(flower)
+                    st.rerun()
+            else:
+                st.caption("_no image yet_")
+        with ar2:
+            up_anatomy = st.file_uploader(
+                "Upload anatomy diagram",
+                type=["jpg", "jpeg", "png", "webp"],
+                key="anatomy_up",
+                label_visibility="collapsed",
+            )
+            anatomy_caption = st.text_input(
+                "Caption (optional)", key="anatomy_caption",
+                value=(flower.anatomy_diagram.caption or "")
+                if flower.anatomy_diagram else "",
+            )
+            if up_anatomy is not None and st.button(
+                "Set as anatomy diagram", key="anatomy_btn",
+                use_container_width=True,
+            ):
+                _misc_dir.mkdir(parents=True, exist_ok=True)
+                out = _misc_dir / f"anatomy{Path(up_anatomy.name).suffix.lower()}"
+                out.write_bytes(up_anatomy.getbuffer())
+                flower.anatomy_diagram = ComponentImage(
+                    path=out.as_uri(),
+                    caption=anatomy_caption.strip() or None,
+                )
+                library.save(flower)
+                st.rerun()
+        st.divider()
+
+        # --- Assembly images ---
+        st.markdown("**Assembly section photos**")
+        if flower.assembly and flower.assembly.images:
+            cols_a = st.columns(min(len(flower.assembly.images), 4))
+            for i, img in enumerate(flower.assembly.images):
+                with cols_a[i % len(cols_a)]:
+                    try:
+                        st.image(img.path, use_container_width=True)
+                    except Exception:  # noqa: BLE001
+                        st.caption("_(preview n/a)_")
+                    if st.button("Remove", key=f"asm_rm_{i}",
+                                 use_container_width=True):
+                        flower.assembly.images.pop(i)
+                        library.save(flower)
+                        st.rerun()
+        else:
+            st.caption("_no images yet_")
+        up_asm = st.file_uploader(
+            "Upload assembly photo",
+            type=["jpg", "jpeg", "png", "webp"],
+            key="asm_up",
+        )
+        asm_caption = st.text_input("Caption (optional)", key="asm_caption")
+        if up_asm is not None and st.button(
+            "Add to assembly", key="asm_btn", use_container_width=True
+        ):
+            _misc_dir.mkdir(parents=True, exist_ok=True)
+            existing = len(flower.assembly.images) if flower.assembly else 0
+            out = _misc_dir / (
+                f"assembly_{existing}{Path(up_asm.name).suffix.lower()}"
+            )
+            out.write_bytes(up_asm.getbuffer())
+            if flower.assembly is None:
+                flower.assembly = AssemblySection()
+            flower.assembly.images.append(ComponentImage(
+                path=out.as_uri(),
+                caption=asm_caption.strip() or None,
+            ))
+            library.save(flower)
+            st.rerun()
+        st.divider()
+
+        # --- Inspo gallery ---
+        st.markdown("**Inspo gallery**")
+        if flower.inspo_images:
+            cols_i = st.columns(min(len(flower.inspo_images), 4))
+            for i, img in enumerate(flower.inspo_images):
+                with cols_i[i % len(cols_i)]:
+                    try:
+                        st.image(img.path, use_container_width=True)
+                    except Exception:  # noqa: BLE001
+                        st.caption("_(preview n/a)_")
+                    if st.button("Remove", key=f"inspo_rm_{i}",
+                                 use_container_width=True):
+                        flower.inspo_images.pop(i)
+                        library.save(flower)
+                        st.rerun()
+        else:
+            st.caption("_no images yet_")
+        up_inspo = st.file_uploader(
+            "Upload inspo photo",
+            type=["jpg", "jpeg", "png", "webp"],
+            key="inspo_up",
+        )
+        inspo_caption = st.text_input("Caption (optional)", key="inspo_caption")
+        if up_inspo is not None and st.button(
+            "Add to inspo gallery", key="inspo_btn", use_container_width=True
+        ):
+            _misc_dir.mkdir(parents=True, exist_ok=True)
+            existing = len(flower.inspo_images)
+            out = _misc_dir / (
+                f"inspo_{existing}{Path(up_inspo.name).suffix.lower()}"
+            )
+            out.write_bytes(up_inspo.getbuffer())
+            flower.inspo_images.append(ComponentImage(
+                path=out.as_uri(),
+                caption=inspo_caption.strip() or None,
+            ))
+            library.save(flower)
+            st.rerun()
+
     # ---- Chat ------------------------------------------------------------
     st.markdown('<div class="sown-chat-label">Conversation</div>', unsafe_allow_html=True)
     chat_box = st.container(height=480, border=True, key="sown_chat_panel")
