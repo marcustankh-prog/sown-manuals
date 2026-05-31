@@ -254,28 +254,30 @@ details[data-testid="stExpander"] > summary {
    so we override every visual variant of the radio/checkbox indicator. */
 
 /* --- Radios -------------------------------------------------------- */
-/* Unselected outer circle: cream with sage-light ring */
-[data-baseweb="radio"] > div,
-[data-testid="stRadio"] label > div {
+/* Unselected outer circle: cream with sage-light ring.
+   Only the FIRST div in the label is the visual indicator — the second
+   div is the text label and must not be tinted. */
+[data-baseweb="radio"] > div:first-of-type,
+[data-testid="stRadio"] label > div:first-of-type {
   background: var(--cream) !important;
   border-color: var(--sage-light) !important;
 }
 /* Inner dot of an unselected radio is transparent */
-[data-baseweb="radio"] > div > div,
-[data-testid="stRadio"] label > div > div {
+[data-baseweb="radio"] > div:first-of-type > div,
+[data-testid="stRadio"] label > div:first-of-type > div {
   background: transparent !important;
   border-color: transparent !important;
 }
 /* Selected state — outer becomes sage, inner becomes cream dot */
-[data-baseweb="radio"][aria-checked="true"] > div,
-[data-baseweb="radio"]:has(input:checked) > div,
-[data-testid="stRadio"] label:has(input:checked) > div {
+[data-baseweb="radio"][aria-checked="true"] > div:first-of-type,
+[data-baseweb="radio"]:has(input:checked) > div:first-of-type,
+[data-testid="stRadio"] label:has(input:checked) > div:first-of-type {
   background: var(--sage) !important;
   border-color: var(--sage) !important;
 }
-[data-baseweb="radio"][aria-checked="true"] > div > div,
-[data-baseweb="radio"]:has(input:checked) > div > div,
-[data-testid="stRadio"] label:has(input:checked) > div > div {
+[data-baseweb="radio"][aria-checked="true"] > div:first-of-type > div,
+[data-baseweb="radio"]:has(input:checked) > div:first-of-type > div,
+[data-testid="stRadio"] label:has(input:checked) > div:first-of-type > div {
   background: var(--cream) !important;
   border-color: var(--cream) !important;
 }
@@ -289,19 +291,19 @@ details[data-testid="stExpander"] > summary {
 }
 
 /* --- Checkboxes & toggles ----------------------------------------- */
-/* Unselected box: cream with sage-light ring */
-[data-baseweb="checkbox"] > span,
-[data-baseweb="checkbox"] > div,
-[data-testid="stCheckbox"] label > div:first-child {
+/* Unselected box: cream with sage-light ring (only the first child) */
+[data-baseweb="checkbox"] > span:first-of-type,
+[data-baseweb="checkbox"] > div:first-of-type,
+[data-testid="stCheckbox"] label > div:first-of-type {
   background: var(--cream) !important;
   border-color: var(--sage-light) !important;
 }
 /* Selected state — sage fill */
-[data-baseweb="checkbox"][aria-checked="true"] > span,
-[data-baseweb="checkbox"][aria-checked="true"] > div,
-[data-baseweb="checkbox"]:has(input:checked) > span,
-[data-baseweb="checkbox"]:has(input:checked) > div,
-[data-testid="stCheckbox"] label:has(input:checked) > div:first-child {
+[data-baseweb="checkbox"][aria-checked="true"] > span:first-of-type,
+[data-baseweb="checkbox"][aria-checked="true"] > div:first-of-type,
+[data-baseweb="checkbox"]:has(input:checked) > span:first-of-type,
+[data-baseweb="checkbox"]:has(input:checked) > div:first-of-type,
+[data-testid="stCheckbox"] label:has(input:checked) > div:first-of-type {
   background: var(--sage) !important;
   border-color: var(--sage) !important;
 }
@@ -317,11 +319,11 @@ details[data-testid="stExpander"] > summary {
 }
 
 /* Toggle (st.toggle) — track palette */
-[data-baseweb="checkbox"][role="switch"] > div {
+[data-baseweb="checkbox"][role="switch"] > div:first-of-type {
   background: var(--cream-dark) !important;
 }
-[data-baseweb="checkbox"][role="switch"][aria-checked="true"] > div,
-[data-baseweb="checkbox"][role="switch"]:has(input:checked) > div {
+[data-baseweb="checkbox"][role="switch"][aria-checked="true"] > div:first-of-type,
+[data-baseweb="checkbox"][role="switch"]:has(input:checked) > div:first-of-type {
   background: var(--sage) !important;
 }
 
