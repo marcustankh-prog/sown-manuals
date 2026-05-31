@@ -94,11 +94,12 @@ def _img_src(path_or_uri: str) -> str:
 
 # Per-target image-processing presets used by both the manual uploaders
 # and the chat upload handler so every uploaded photo is cropped/squared.
+# bg="remove" is required for auto-crop to find the subject in a busy photo.
 _IMAGE_PRESETS = {
-    "hero":           {"mode": "photo",  "bg": "keep"},
+    "hero":           {"mode": "photo",  "bg": "remove"},
     "anatomy":        {"mode": "auto",   "bg": "remove"},
     "assembly":       {"mode": "auto",   "bg": "remove"},
-    "inspo":          {"mode": "photo",  "bg": "keep"},
+    "inspo":          {"mode": "photo",  "bg": "remove"},
     "component_step": {"mode": "auto",   "bg": "remove"},
 }
 
@@ -109,10 +110,20 @@ def _clean_to(target: str, src_path: Path, dest: Path) -> Path:
     preset = _IMAGE_PRESETS.get(target, {"mode": "auto", "bg": "remove"})
     try:
         image_processing.clean_image(src_path, dest, **preset)
-    except Exception:  # noqa: BLE001
-        # Worst case: keep the original bytes so the user still gets the image.
-        if src_path.resolve() != dest.resolve():
-            dest.write_bytes(src_path.read_bytes())
+    except Exception as e:  # noqa: BLE001
+        # Worst case: re-encode the source as PNG so the manual still
+        # gets a valid image, and surface the error so we can debug.
+        try:
+            from PIL import Image, ImageOps
+            img = ImageOps.exif_transpose(Image.open(src_path)).convert("RGB")
+            img.save(dest, format="PNG", optimize=True)
+        except Exception:  # noqa: BLE001
+            if src_path.resolve() != dest.resolve():
+                dest.write_bytes(src_path.read_bytes())
+        try:
+            st.warning(f"Image cleaning fell back to raw copy: {e}")
+        except Exception:  # noqa: BLE001
+            pass
     return dest
 
 
