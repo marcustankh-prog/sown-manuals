@@ -239,7 +239,8 @@ with col_chat:
                             st.session_state.chat_messages = []
                             st.session_state.chat_history = []
                             st.session_state.save_name_input = (
-                                loaded.library_label or loaded.name
+                                getattr(loaded, "library_label", None)
+                                or loaded.name
                             )
                             st.success(f"Loaded \u201c{ent['name']}\u201d.")
                             st.rerun()
@@ -252,7 +253,8 @@ with col_chat:
         if flower.components:
             st.divider()
             default_save_name = st.session_state.get(
-                "save_name_input", flower.library_label or flower.name
+                "save_name_input",
+                getattr(flower, "library_label", None) or flower.name,
             )
             save_name = st.text_input(
                 "Save as",
@@ -523,7 +525,9 @@ with col_chat:
                 "sketches and photo style for photos — override per row if "
                 "you'd rather lock one or the other."
             )
-            _slug = library.slugify(flower.library_label or flower.name)
+            _slug = library.slugify(
+                getattr(flower, "library_label", None) or flower.name
+            )
             _steps_dir = UPLOADS / "steps" / _slug
 
             for c_idx, comp in enumerate(flower.components):
