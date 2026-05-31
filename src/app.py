@@ -791,6 +791,11 @@ with _left_container:
                     continue
                 if action["action"] == "set_hero":
                     flower.hero_image = Path(src_path).as_uri()
+                elif action["action"] == "add_inspo":
+                    flower.inspo_images.append(ComponentImage(
+                        path=Path(src_path).as_uri(),
+                        caption=action.get("caption"),
+                    ))
                 elif action["action"] == "attach_step":
                     c_idx = action["component_index"]
                     s_idx = action["step_index"]
