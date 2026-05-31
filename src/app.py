@@ -134,6 +134,23 @@ def _clean_to(target: str, src_path: Path, dest: Path,
     return dest
 
 
+def _uri_to_path(uri: Optional[str]) -> Optional[Path]:
+    """Convert a stored file:// URI back to a Path, if it points to a real file."""
+    if not uri:
+        return None
+    try:
+        from urllib.parse import urlparse, unquote
+        parsed = urlparse(uri)
+        if parsed.scheme == "file":
+            p = Path(unquote(parsed.path.lstrip("/"))) if os.name == "nt" \
+                else Path(unquote(parsed.path))
+        else:
+            p = Path(uri)
+        return p if p.exists() else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 # ---------- UI ---------------------------------------------------------------
 
 st.set_page_config(page_title="SOWN — Beaded Flower Manual", page_icon="🌿", layout="wide")
@@ -751,7 +768,7 @@ with _left_container:
             """Render an AI-generate button. Disabled until a reference exists."""
             if not has_openai:
                 st.caption(
-                    "_Set OPENAI_API_KEY to enable gpt-image-1 generation._"
+                    "_Set OPENAI_API_KEY to enable AI image generation._"
                 )
                 return
             disabled = raw_path is None or not raw_path.exists()
@@ -763,7 +780,7 @@ with _left_container:
                 "hand-drawn sketch for anatomy)."
             )
             if st.button(
-                "✨ Generate variation with gpt-image-1",
+                "✨ Generate variation with AI",
                 key=f"{label_key}_ai",
                 use_container_width=True,
                 disabled=disabled,
@@ -838,7 +855,10 @@ with _left_container:
                 flower.hero_image = out.as_uri()
                 library.save(flower)
                 st.rerun()
-            _ai_generate_button("hero", "hero", hero_raw)
+            _ai_generate_button(
+                "hero", "hero",
+                hero_raw or _uri_to_path(flower.hero_image),
+            )
         st.divider()
 
         # --- Anatomy diagram ---
@@ -889,7 +909,12 @@ with _left_container:
                 )
                 library.save(flower)
                 st.rerun()
-            _ai_generate_button("anatomy", "anatomy", anatomy_raw)
+            _ai_generate_button(
+                "anatomy", "anatomy",
+                anatomy_raw or _uri_to_path(
+                    flower.anatomy_diagram.path if flower.anatomy_diagram else None
+                ),
+            )
         st.divider()
 
         # --- Assembly images ---
@@ -986,7 +1011,13 @@ with _left_container:
             ))
             library.save(flower)
             st.rerun()
-        _ai_generate_button("inspo", "inspo", inspo_raw)
+        _ai_generate_button(
+            "inspo", "inspo",
+            inspo_raw or (
+                _uri_to_path(flower.inspo_images[-1].path)
+                if flower.inspo_images else None
+            ),
+        )
 
     # ---- Chat ------------------------------------------------------------
     st.markdown('<div class="sown-chat-label">Conversation</div>', unsafe_allow_html=True)
