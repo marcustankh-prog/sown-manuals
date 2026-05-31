@@ -94,15 +94,16 @@ st.set_page_config(page_title="SOWN — Beaded Flower Manual", page_icon="🌿",
 # === Brand styling (Sown.objects identity) ===================================
 
 _APP_CSS = (ROOT / "static" / "app.css").read_text(encoding="utf-8")
-# NOTE: must use st.markdown(unsafe_allow_html=True) — st.html renders inside
-# an iframe component, so a <style> block there never affects the host app.
+# Inject Google Fonts <link> tags and the brand <style> block separately —
+# combining them in one markdown call caused Streamlit to render the CSS
+# as visible text instead of applying it.
 st.markdown(
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-    '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">'
-    f"<style>{_APP_CSS}</style>",
+    '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">',
     unsafe_allow_html=True,
 )
+st.markdown(f"<style>{_APP_CSS}</style>", unsafe_allow_html=True)
 
 flower = _ensure_state()
 
