@@ -53,9 +53,14 @@ SAMPLE_DAISY = ROOT / "data" / "sample_daisy.json"
 # ---------- Session helpers --------------------------------------------------
 
 def _load_default_flower() -> Flower:
+    """Empty flower for first-load welcome state."""
+    return Flower(name="Flower", title="French Beaded Flower")
+
+
+def _load_sample_flower() -> Flower:
     if SAMPLE_DAISY.exists():
         return Flower.model_validate_json(SAMPLE_DAISY.read_text(encoding="utf-8"))
-    return Flower(name="Flower", title="French Beaded Flower")
+    return _load_default_flower()
 
 
 def _ensure_state() -> Flower:
@@ -145,7 +150,7 @@ with bar_r:
         n_inspo = st.slider("Inspo images", 0, 6, 4, key="cfg_inspo")
         st.divider()
         if st.button("Reset to sample Daisy", use_container_width=True):
-            st.session_state.flower = _load_default_flower()
+            st.session_state.flower = _load_sample_flower()
             st.session_state.chat_messages = []
             st.session_state.chat_history = []
             st.rerun()
@@ -198,7 +203,7 @@ elif not has_openai:
         "generation is skipped \u2014 the manual will render with text only."
     )
 
-# === Main area: chat (left) + live preview (right) ==========================
+# === Main area =============================================================
 
 # Initialise chat state
 if "chat_messages" not in st.session_state:
@@ -206,9 +211,29 @@ if "chat_messages" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []   # for the API: same shape
 
-col_chat, col_preview = st.columns([0.42, 0.58], gap="large")
+# Welcome mode (no manual yet) → single column with just Saved manuals + Start
+# from a photo. Editing mode (a draft exists) → two-column chat + preview.
+HAS_MANUAL = bool(flower.components)
 
-with col_chat:
+if HAS_MANUAL:
+    col_chat, col_preview = st.columns([0.42, 0.58], gap="large")
+    _left_container = col_chat
+else:
+    # Centre a comfortable-width column for the welcome screen.
+    _w_l, _w_c, _w_r = st.columns([0.15, 0.7, 0.15])
+    _left_container = _w_c
+    with _w_c:
+        st.markdown(
+            "<div style='font-family:Cormorant Garamond,serif;"
+            "font-style:italic;color:#5C6652;font-size:1.15rem;"
+            "margin:1.5rem 0 1.25rem 0;line-height:1.5;'>"
+            "Begin a new beaded-flower manual — open a saved draft below, "
+            "or upload reference photographs to draft one from scratch."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+with _left_container:
     # ---- Saved manuals library -----------------------------------------
     _entries = library.list_entries()
     with st.expander(
@@ -460,6 +485,11 @@ with col_chat:
                 else:
                     st.rerun()
 
+    # Everything from here on is editing-mode only — only show once the
+    # user has a generated draft (components exist).
+    if not HAS_MANUAL:
+        st.stop()
+
     # ---- Source-photo classifier warning --------------------------------
     _src_kind = getattr(flower, "source_kind", None)
     _src_mode = getattr(flower, "source_mode", "plant")
@@ -550,16 +580,20 @@ with col_chat:
                         (img for img in comp.images if img.step_index == s_idx),
                         None,
                     )
-                    r1, r2, r3 = st.columns([0.5, 0.18, 0.32])
+                    # Step description on its own full-width row.
+                    excerpt = para[:170] + ("…" if len(para) > 170 else "")
+                    st.markdown(
+                        f"<div style='font-family:Jost,sans-serif;"
+                        f"font-size:0.86rem;color:#2A2B27;line-height:1.5;'>"
+                        f"<span style='color:#7A7B75;letter-spacing:0.1em;"
+                        f"text-transform:uppercase;font-size:0.72rem;'>"
+                        f"Step {s_idx + 1}</span><br>"
+                        f"{excerpt}</div>",
+                        unsafe_allow_html=True,
+                    )
+                    # Thumbnail / no-image placeholder + uploader on row 2.
+                    r1, r2 = st.columns([0.22, 0.78])
                     with r1:
-                        excerpt = para[:170] + ("…" if len(para) > 170 else "")
-                        st.markdown(
-                            f"<span style='color:#7A7B75;font-size:0.78em'>"
-                            f"Step {s_idx + 1}</span><br>"
-                            f"<span style='font-size:0.88em'>{excerpt}</span>",
-                            unsafe_allow_html=True,
-                        )
-                    with r2:
                         if cur and cur.path:
                             try:
                                 st.image(cur.path, use_container_width=True)
@@ -574,43 +608,54 @@ with col_chat:
                                 library.save(flower)
                                 st.rerun()
                         else:
-                            st.caption("_no image_")
-                    with r3:
+                            st.caption("_no image yet_")
+                    with r2:
                         upl = st.file_uploader(
                             "Upload photo or sketch",
                             type=["jpg", "jpeg", "png", "webp"],
                             key=f"{kp}_up",
                             label_visibility="collapsed",
                         )
+                    # Controls on row 3 — wide enough that nothing truncates.
+                    c1, c2, c3 = st.columns([0.36, 0.36, 0.28])
+                    with c1:
                         style = st.selectbox(
                             "Style",
                             options=["auto", "line_art", "photo"],
                             format_func=lambda v: {
                                 "auto": "Auto-detect",
                                 "line_art": "Line drawing",
-                                "photo": "Photo (keep colour)",
+                                "photo": "Photo",
                             }[v],
                             index=0,
                             key=f"{kp}_style",
                             help=(
                                 "How to render the image. "
-                                "Auto picks line drawing for sketches and photo for photographs. "
-                                "Line drawing converts to black outlines on white."
+                                "Auto picks line drawing for sketches and "
+                                "photo for photographs. Line drawing "
+                                "converts to black outlines on white."
                             ),
                         )
+                    with c2:
                         bg = st.selectbox(
                             "Background",
                             options=["remove", "keep"],
                             format_func=lambda v: {
-                                "remove": "Remove background",
-                                "keep": "Keep background",
+                                "remove": "Remove",
+                                "keep": "Keep",
                             }[v],
                             index=0,
                             key=f"{kp}_bg",
                             help=(
-                                "Remove cuts out the subject (best for clean step diagrams). "
-                                "Keep leaves the original background untouched."
+                                "Remove cuts out the subject (best for "
+                                "clean step diagrams). Keep leaves the "
+                                "original background untouched."
                             ),
+                        )
+                    with c3:
+                        st.markdown(
+                            "<div style='height:1.85rem'></div>",
+                            unsafe_allow_html=True,
                         )
                         if upl is not None and st.button(
                             "Clean & attach", key=f"{kp}_btn",
@@ -641,7 +686,7 @@ with col_chat:
                                 st.rerun()
                             except Exception as e:  # noqa: BLE001
                                 st.error(f"Cleanup failed: {e}")
-                st.markdown("")
+                    st.divider()
 
     # ---- Chat ------------------------------------------------------------
     chat_box = st.container(height=480)
