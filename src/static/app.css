@@ -1,6 +1,7 @@
 /* Sown.objects — Streamlit app chrome */
 
 :root {
+  color-scheme: light !important;
   --sage: #8A9180;
   --sage-dark: #6B7164;
   --sage-light: #C4CABD;
@@ -15,6 +16,17 @@
   --muted: #7A7B75;
   --serif: 'Cormorant Garamond', Georgia, serif;
   --sans: 'Jost', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Force the brand light palette regardless of user/system dark-mode
+   preference. Streamlit otherwise inherits prefers-color-scheme. */
+html, html[data-theme="dark"], body,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stSidebar"],
+section.main {
+  background: var(--parchment) !important;
+  color: var(--ink) !important;
 }
 
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"] {
@@ -84,8 +96,15 @@ h1, h2, h3, h4 {
   letter-spacing: 0.01em;
 }
 
-/* Buttons — quiet, square-ish, sage */
-.stButton > button, .stDownloadButton > button {
+/* Buttons — quiet, square-ish, sage. Selectors cover both legacy
+   and current Streamlit DOM, and override dark-mode defaults. */
+.stButton > button,
+.stDownloadButton > button,
+[data-testid="stBaseButton-secondary"],
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-tertiary"],
+button[kind="secondary"],
+button[kind="primary"] {
   font-family: var(--serif) !important;
   font-style: italic;
   font-weight: 400 !important;
@@ -98,23 +117,32 @@ h1, h2, h3, h4 {
   color: var(--ink) !important;
   padding: 0.55rem 1.1rem !important;
   transition: all 0.2s ease;
+  box-shadow: none !important;
 }
-.stButton > button:hover, .stDownloadButton > button:hover {
+.stButton > button:hover,
+.stDownloadButton > button:hover,
+[data-testid^="stBaseButton"]:hover,
+button[kind]:hover {
   border-color: var(--sage) !important;
   background: var(--sage-pale) !important;
   color: var(--sage-dark) !important;
 }
-.stButton > button[kind="primary"] {
+.stButton > button[kind="primary"],
+[data-testid="stBaseButton-primary"],
+button[kind="primary"] {
   background: var(--sage) !important;
   border-color: var(--sage) !important;
   color: var(--cream) !important;
 }
-.stButton > button[kind="primary"]:hover {
+.stButton > button[kind="primary"]:hover,
+[data-testid="stBaseButton-primary"]:hover,
+button[kind="primary"]:hover {
   background: var(--sage-dark) !important;
   border-color: var(--sage-dark) !important;
   color: var(--cream) !important;
 }
-.stButton > button:disabled { opacity: 0.45; }
+.stButton > button:disabled,
+button:disabled { opacity: 0.45; }
 
 /* Inputs */
 .stTextInput input, .stTextArea textarea, .stChatInput textarea {
@@ -130,10 +158,36 @@ h1, h2, h3, h4 {
 }
 
 /* File uploader */
-[data-testid="stFileUploaderDropzone"] {
+[data-testid="stFileUploaderDropzone"],
+[data-testid="stFileUploader"] section,
+[data-testid="stFileUploader"] [data-testid="stFileUploaderDropzoneInstructions"] {
   background: var(--cream) !important;
   border: 1px dashed var(--sage-light) !important;
   border-radius: 2px !important;
+  color: var(--ink) !important;
+}
+[data-testid="stFileUploader"] button,
+[data-testid="stFileUploaderDropzone"] button {
+  background: var(--sage-pale) !important;
+  color: var(--sage-dark) !important;
+  border: 1px solid var(--sage-light) !important;
+}
+
+/* Selectbox / dropdowns */
+.stSelectbox div[data-baseweb="select"] > div,
+[data-baseweb="select"] > div {
+  background: var(--cream) !important;
+  border-color: var(--cream-dark) !important;
+  color: var(--ink) !important;
+}
+[data-baseweb="popover"] [role="listbox"],
+[data-baseweb="menu"] {
+  background: var(--cream) !important;
+  color: var(--ink) !important;
+}
+[data-baseweb="menu"] li:hover,
+[role="option"]:hover {
+  background: var(--sage-pale) !important;
 }
 
 /* Chat messages */
@@ -157,13 +211,18 @@ h1, h2, h3, h4 {
   color: var(--muted) !important;
 }
 
-/* Expander */
-[data-testid="stExpander"] {
+/* Expander — selectors cover both old <details>/summary structure
+   and the newer details-toggle markup. */
+[data-testid="stExpander"],
+[data-testid="stExpander"] details,
+details[data-testid="stExpander"] {
   border: 1px solid var(--cream-dark) !important;
   border-radius: 2px !important;
   background: var(--cream) !important;
 }
-[data-testid="stExpander"] summary {
+[data-testid="stExpander"] summary,
+[data-testid="stExpanderToggle"],
+details[data-testid="stExpander"] > summary {
   font-family: var(--serif) !important;
   font-style: italic;
   font-weight: 400 !important;
@@ -171,6 +230,11 @@ h1, h2, h3, h4 {
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--ink) !important;
+  background: var(--cream) !important;
+}
+[data-testid="stExpander"] [data-testid="stExpanderDetails"],
+[data-testid="stExpanderContent"] {
+  background: var(--parchment) !important;
 }
 
 /* Sliders */
