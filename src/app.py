@@ -391,12 +391,6 @@ with _left_container:
             "\U0001FAA1 This is already a beaded flower \u2014 recreate it exactly",
             value=False,
             key="recreate_mode",
-            help=(
-                "Tick this if your photo is a finished beaded piece (not a "
-                "living plant). The pattern will copy its layer counts, "
-                "petal shapes, and bead colours rather than improvise from a "
-                "real flower."
-            ),
         )
         gen_mode = "recreate" if recreate_mode else "plant"
         if uploaded:
