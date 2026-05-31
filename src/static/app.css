@@ -261,11 +261,48 @@ details[data-testid="stExpander"] > summary {
 /* Progress bar */
 .stProgress > div > div > div { background: var(--sage) !important; }
 
-/* Alerts — soft sage / blush rather than harsh blue/yellow */
-[data-testid="stAlertContentInfo"] { background: var(--sage-pale) !important; color: var(--moss) !important; }
-[data-testid="stAlertContentWarning"] { background: #F5E8DC !important; color: var(--terracotta) !important; }
-[data-testid="stAlertContentError"] { background: #F5E0D8 !important; color: #8a4a35 !important; }
-[data-testid="stAlertContentSuccess"] { background: var(--sage-pale) !important; color: var(--moss) !important; }
+/* Alerts — soft sage / blush rather than harsh blue/yellow.
+   Selectors cover both the older stAlertContent* test-ids and the
+   current .stAlert / role=alert markup. */
+.stAlert,
+[data-testid="stAlert"],
+[role="alert"] {
+  background: var(--sage-pale) !important;
+  color: var(--moss) !important;
+  border: 1px solid var(--sage-light) !important;
+  border-radius: 2px !important;
+}
+.stAlert p, .stAlert div, .stAlert li,
+[data-testid="stAlert"] p, [data-testid="stAlert"] div, [data-testid="stAlert"] li {
+  color: var(--moss) !important;
+  font-family: var(--sans) !important;
+}
+[data-testid="stAlertContentInfo"],
+[data-testid="stAlert"][kind="info"],
+.stAlert[data-kind="info"] {
+  background: var(--sage-pale) !important;
+  color: var(--moss) !important;
+}
+[data-testid="stAlertContentWarning"],
+[data-testid="stAlert"][kind="warning"],
+.stAlert[data-kind="warning"] {
+  background: #F5E8DC !important;
+  color: var(--terracotta) !important;
+  border-color: #E8CDB7 !important;
+}
+[data-testid="stAlertContentError"],
+[data-testid="stAlert"][kind="error"],
+.stAlert[data-kind="error"] {
+  background: #F5E0D8 !important;
+  color: #8a4a35 !important;
+  border-color: #E5B7A2 !important;
+}
+[data-testid="stAlertContentSuccess"],
+[data-testid="stAlert"][kind="success"],
+.stAlert[data-kind="success"] {
+  background: var(--sage-pale) !important;
+  color: var(--moss) !important;
+}
 
 /* Popover */
 [data-testid="stPopover"] button {
