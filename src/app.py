@@ -94,11 +94,14 @@ st.set_page_config(page_title="SOWN — Beaded Flower Manual", page_icon="🌿",
 # === Brand styling (Sown.objects identity) ===================================
 
 _APP_CSS = (ROOT / "static" / "app.css").read_text(encoding="utf-8")
-st.html(
+# NOTE: must use st.markdown(unsafe_allow_html=True) — st.html renders inside
+# an iframe component, so a <style> block there never affects the host app.
+st.markdown(
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
     '<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">'
-    f"<style>{_APP_CSS}</style>"
+    f"<style>{_APP_CSS}</style>",
+    unsafe_allow_html=True,
 )
 
 flower = _ensure_state()
@@ -112,7 +115,7 @@ has_openai = bool(os.getenv("OPENAI_API_KEY"))
 
 bar_l, bar_r = st.columns([0.85, 0.15])
 with bar_l:
-    st.html(
+    st.markdown(
         '<div class="sown-header">'
         '<svg class="sown-mark" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">'
         '<circle cx="28" cy="28" r="20" stroke="#C4CABD" stroke-width="0.8" fill="none"/>'
@@ -130,7 +133,8 @@ with bar_l:
         '<div class="sown-divider"></div>'
         '<p class="sown-subtitle">A quiet studio for crafting beaded-flower manuals — one bead, one petal at a time.</p>'
         '</div>'
-        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
     )
 with bar_r:
     with st.popover("Settings", use_container_width=True):
